@@ -80,6 +80,17 @@ namespace aasdk::channel::navigationstatus {
       case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_NAVIGATION_DISTANCE_EVENT:
         this->handleDistanceEvent(payload, std::move(eventHandler));
         break;
+      case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_NAVIGATION_STATE:
+        this->handleNavigationState(payload, std::move(eventHandler));
+        break;
+      case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_NAVIGATION_CURRENT_POSITION:
+        this->handleCurrentPosition(payload, std::move(eventHandler));
+        break;
+      case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_START:
+      case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_STOP:
+        AASDK_LOG_CHANNEL_NAVIGATION(debug, "instrument cluster start/stop");
+        this->receive(std::move(eventHandler));
+        break;
       default:
         AASDK_LOG(error) << "[NavigationStatusService] Message Id not Handled: " << messageId.getId() << " : "
                          << dump(payload);
@@ -137,6 +148,30 @@ namespace aasdk::channel::navigationstatus {
       AASDK_LOG(error) << "[NavigationStatusService] encountered error with message: " << dump(payload);
     }
 
+  }
+
+  void NavigationStatusService::handleNavigationState(const common::DataConstBuffer &payload,
+                                                      INavigationStatusServiceEventHandler::Pointer eventHandler) {
+    AASDK_LOG_CHANNEL_NAVIGATION(debug, "handleNavigationState()");
+    aap_protobuf::service::navigationstatus::message::NavigationState state;
+    if (state.ParseFromArray(payload.cdata, payload.size)) {
+      eventHandler->onNavigationState(state);
+    } else {
+      eventHandler->onChannelError(error::Error(error::ErrorCode::PARSE_PAYLOAD));
+      AASDK_LOG(error) << "[NavigationStatusService] encountered error with message: " << dump(payload);
+    }
+  }
+
+  void NavigationStatusService::handleCurrentPosition(const common::DataConstBuffer &payload,
+                                                      INavigationStatusServiceEventHandler::Pointer eventHandler) {
+    AASDK_LOG_CHANNEL_NAVIGATION(debug, "handleCurrentPosition()");
+    aap_protobuf::service::navigationstatus::message::NavigationCurrentPosition position;
+    if (position.ParseFromArray(payload.cdata, payload.size)) {
+      eventHandler->onCurrentPosition(position);
+    } else {
+      eventHandler->onChannelError(error::Error(error::ErrorCode::PARSE_PAYLOAD));
+      AASDK_LOG(error) << "[NavigationStatusService] encountered error with message: " << dump(payload);
+    }
   }
 
 }

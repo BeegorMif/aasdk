@@ -21,6 +21,8 @@
 #include <aap_protobuf/service/navigationstatus/message/NavigationNextTurnDistanceEvent.pb.h>
 #include <aap_protobuf/service/navigationstatus/message/NavigationNextTurnEvent.pb.h>
 #include <aap_protobuf/service/navigationstatus/message/NavigationStatus.pb.h>
+#include <aap_protobuf/service/navigationstatus/message/NavigationState.pb.h>
+#include <aap_protobuf/service/navigationstatus/message/NavigationCurrentPosition.pb.h>
 #include "aasdk/Error/Error.hpp"
 
 namespace aasdk::channel::navigationstatus {
@@ -43,6 +45,13 @@ namespace aasdk::channel::navigationstatus {
 
     virtual void
     onDistanceEvent(const aap_protobuf::service::navigationstatus::message::NavigationNextTurnDistanceEvent &distanceEvent) = 0;
+
+    // Current protocol (replaces the deprecated turn/distance events): upcoming steps and destinations
+    virtual void onNavigationState(const aap_protobuf::service::navigationstatus::message::NavigationState &state) = 0;
+
+    // Current protocol: distance/time to the next step and to the destinations
+    virtual void
+    onCurrentPosition(const aap_protobuf::service::navigationstatus::message::NavigationCurrentPosition &position) = 0;
   };
 
 }

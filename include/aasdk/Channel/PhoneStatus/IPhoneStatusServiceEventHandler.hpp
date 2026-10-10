@@ -19,6 +19,7 @@
 
 
 #include <aap_protobuf/service/control/message/ChannelOpenRequest.pb.h>
+#include <aap_protobuf/service/phonestatus/message/PhoneStatus.pb.h>
 #include "aasdk/Error/Error.hpp"
 
 namespace aasdk::channel::phonestatus {
@@ -35,6 +36,9 @@ namespace aasdk::channel::phonestatus {
     virtual void onChannelOpenRequest(const aap_protobuf::service::control::message::ChannelOpenRequest &request) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+    // Calls in progress (state, caller, duration) and signal strength
+    virtual void onPhoneStatus(const aap_protobuf::service::phonestatus::message::PhoneStatus &status) = 0;
   };
 
 }
