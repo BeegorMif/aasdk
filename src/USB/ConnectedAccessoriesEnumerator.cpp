@@ -16,6 +16,7 @@
 // along with aasdk. If not, see <http://www.gnu.org/licenses/>.
 
 #include <aasdk/USB/ConnectedAccessoriesEnumerator.hpp>
+#include <aasdk/USB/DeviceFilter.hpp>
 
 
 namespace aasdk {
@@ -88,6 +89,10 @@ namespace aasdk {
       DeviceHandle handle;
 
       while (actualDeviceIter_ != deviceListHandle_->end()) {
+        if (isCertainlyNotPhone(*actualDeviceIter_)) {
+          ++actualDeviceIter_;
+          continue;
+        }
         auto openResult = usbWrapper_.open(*actualDeviceIter_, handle);
         ++actualDeviceIter_;
 

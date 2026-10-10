@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with aasdk. If not, see <http://www.gnu.org/licenses/>.
 
-#include <thread>
 #include <aasdk/USB/IUSBWrapper.hpp>
 #include <aasdk/USB/USBHub.hpp>
+#include <aasdk/USB/DeviceFilter.hpp>
 #include <aasdk/USB/AccessoryModeQueryChain.hpp>
 #include <aasdk/Error/Error.hpp>
 
@@ -92,6 +92,9 @@ namespace aasdk {
       if (usbWrapper_.getDeviceDescriptor(device, deviceDescriptor) != 0) {
         return;
       }
+      if (!this->isAOAPDevice(deviceDescriptor) && isCertainlyNotPhone(device)) {
+        return;
+      }
 
       DeviceHandle handle;
       auto openResult = usbWrapper_.open(device, handle);
@@ -104,10 +107,6 @@ namespace aasdk {
         hotplugPromise_->resolve(std::move(handle));
         hotplugPromise_.reset();
       } else {
-        ////////// Workaround for VMware
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        //////////
-
         queryChainQueue_.emplace_back(queryChainFactory_.create());
 
         auto queueElementIter = std::prev(queryChainQueue_.end());
