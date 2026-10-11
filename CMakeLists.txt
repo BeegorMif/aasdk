@@ -6,7 +6,7 @@ endif()
 
 # Version of the OpenHU fork (branch openhu): bump the minor version for new API,
 # the major version for breaking changes. Releases are tagged openhu-v<version>.
-project(aasdk VERSION 1.0.0)
+project(aasdk VERSION 1.1.0)
 message(STATUS "AASDK Library")
 message(STATUS "Cross Compiling?")
 
