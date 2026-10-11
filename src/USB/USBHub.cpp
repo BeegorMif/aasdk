@@ -92,7 +92,7 @@ namespace aasdk {
       if (usbWrapper_.getDeviceDescriptor(device, deviceDescriptor) != 0) {
         return;
       }
-      if (!this->isAOAPDevice(deviceDescriptor) && isCertainlyNotPhone(device)) {
+      if (!this->isAOAPDevice(deviceDescriptor) && isCertainlyNotPhone(usbWrapper_, device, deviceDescriptor)) {
         return;
       }
 

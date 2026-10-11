@@ -38,17 +38,14 @@ namespace aasdk::usb {
 
   }
 
-  bool isCertainlyNotPhone(libusb_device *device) {
-    libusb_device_descriptor deviceDescriptor{};
-    if (libusb_get_device_descriptor(device, &deviceDescriptor) != 0) {
-      return false;
-    }
+  bool isCertainlyNotPhone(IUSBWrapper &usbWrapper, libusb_device *device,
+                           const libusb_device_descriptor &deviceDescriptor) {
     if (deviceDescriptor.bDeviceClass == LIBUSB_CLASS_HUB) {
       return true;
     }
 
-    libusb_config_descriptor *config = nullptr;
-    if (libusb_get_active_config_descriptor(device, &config) != 0 || config == nullptr) {
+    ConfigDescriptorHandle config;
+    if (usbWrapper.getConfigDescriptor(device, 0, config) != 0 || config == nullptr) {
       return false;
     }
 
@@ -59,7 +56,6 @@ namespace aasdk::usb {
         onlyNonPhone = isNonPhoneClass(interface.altsetting[a].bInterfaceClass);
       }
     }
-    libusb_free_config_descriptor(config);
     return onlyNonPhone;
   }
 

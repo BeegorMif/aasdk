@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <libusb.h>
+#include <aasdk/USB/IUSBWrapper.hpp>
 
 namespace aasdk::usb {
 
@@ -24,6 +24,8 @@ namespace aasdk::usb {
   // video, printer or smart card. They get no Android accessory requests: each one waits for a timeout on
   // devices that do not answer (seconds at startup with many devices) and the request is vendor specific.
   // Network interfaces (CDC, RNDIS) are kept, a phone in USB tethering looks like that.
-  bool isCertainlyNotPhone(libusb_device *device);
+  // Goes through the wrapper: the unit tests pass fake device pointers.
+  bool isCertainlyNotPhone(IUSBWrapper &usbWrapper, libusb_device *device,
+                           const libusb_device_descriptor &deviceDescriptor);
 
 }

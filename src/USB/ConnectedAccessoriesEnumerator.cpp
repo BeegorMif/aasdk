@@ -89,7 +89,9 @@ namespace aasdk {
       DeviceHandle handle;
 
       while (actualDeviceIter_ != deviceListHandle_->end()) {
-        if (isCertainlyNotPhone(*actualDeviceIter_)) {
+        libusb_device_descriptor deviceDescriptor{};
+        if (usbWrapper_.getDeviceDescriptor(*actualDeviceIter_, deviceDescriptor) == 0 &&
+            isCertainlyNotPhone(usbWrapper_, *actualDeviceIter_, deviceDescriptor)) {
           ++actualDeviceIter_;
           continue;
         }
