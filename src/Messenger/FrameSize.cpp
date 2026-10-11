@@ -35,13 +35,13 @@ namespace aasdk {
     FrameSize::FrameSize(const common::DataConstBuffer &buffer) {
       if (buffer.size >= 2) {
         frameSizeType_ = FrameSizeType::SHORT;
-        frameSize_ = boost::endian::big_to_native(reinterpret_cast<const uint16_t &>(buffer.cdata[0]));
+        frameSize_ = boost::endian::load_big_u16(buffer.cdata);
         totalSize_ = frameSize_;
       }
 
       if (buffer.size >= 6) {
         frameSizeType_ = FrameSizeType::EXTENDED;
-        totalSize_ = boost::endian::big_to_native(reinterpret_cast<const uint32_t &>(buffer.cdata[2]));
+        totalSize_ = boost::endian::load_big_u32(buffer.cdata + 2);
       }
     }
 

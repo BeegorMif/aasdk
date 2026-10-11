@@ -27,8 +27,7 @@ namespace aasdk::messenger {
   }
 
   Timestamp::Timestamp(const common::DataConstBuffer &buffer) {
-    const ValueType &timestampBig = reinterpret_cast<const ValueType &>(buffer.cdata[0]);
-    stamp_ = boost::endian::big_to_native(timestampBig);
+    stamp_ = boost::endian::load_big_u64(buffer.cdata);
   }
 
   common::Data Timestamp::getData() const {

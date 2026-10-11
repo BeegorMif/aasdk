@@ -40,15 +40,7 @@ namespace aasdk::messenger {
       } else {
         AASDK_LOG_MESSENGER(debug, "Push promise to queue.");
         channelReceivePromiseQueue_.push(channelId, std::move(promise));
-
-        if (channelReceivePromiseQueue_.size() == 1) {
-          AASDK_LOG_MESSENGER(debug, "Processing promise.");
-          auto inStreamPromise = ReceivePromise::defer(receiveStrand_);
-          inStreamPromise->then(
-              std::bind(&Messenger::inStreamMessageHandler, this->shared_from_this(), std::placeholders::_1),
-              std::bind(&Messenger::rejectReceivePromiseQueue, this->shared_from_this(), std::placeholders::_1));
-          messageInStream_->startReceive(std::move(inStreamPromise));
-        }
+        this->startInStreamReceive();
       }
     });
   }
@@ -64,7 +56,21 @@ namespace aasdk::messenger {
         });
   }
 
+  void Messenger::startInStreamReceive() {
+    if (inStreamReceiving_) {
+      return;
+    }
+    AASDK_LOG_MESSENGER(debug, "Processing promise.");
+    inStreamReceiving_ = true;
+    auto inStreamPromise = ReceivePromise::defer(receiveStrand_);
+    inStreamPromise->then(
+        std::bind(&Messenger::inStreamMessageHandler, this->shared_from_this(), std::placeholders::_1),
+        std::bind(&Messenger::rejectReceivePromiseQueue, this->shared_from_this(), std::placeholders::_1));
+    messageInStream_->startReceive(std::move(inStreamPromise));
+  }
+
   void Messenger::inStreamMessageHandler(Message::Pointer message) {
+    inStreamReceiving_ = false;
     auto channelId = message->getChannelId();
     AASDK_LOG(debug) << "[Messenger::inStreamMessageHandler] Handling message for ChannelId "
                      << channelIdToString(message->getChannelId());
@@ -81,11 +87,7 @@ namespace aasdk::messenger {
 
     if (!channelReceivePromiseQueue_.empty()) {
       AASDK_LOG_MESSENGER(debug, "Initiate queue for receiving.");
-      auto inStreamPromise = ReceivePromise::defer(receiveStrand_);
-      inStreamPromise->then(
-          std::bind(&Messenger::inStreamMessageHandler, this->shared_from_this(), std::placeholders::_1),
-          std::bind(&Messenger::rejectReceivePromiseQueue, this->shared_from_this(), std::placeholders::_1));
-      messageInStream_->startReceive(std::move(inStreamPromise));
+      this->startInStreamReceive();
     }
   }
 
@@ -109,6 +111,7 @@ namespace aasdk::messenger {
   }
 
   void Messenger::rejectReceivePromiseQueue(const error::Error &e) {
+    inStreamReceiving_ = false;
     while (!channelReceivePromiseQueue_.empty()) {
       channelReceivePromiseQueue_.pop()->reject(e);
     }

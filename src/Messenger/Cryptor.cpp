@@ -149,6 +149,11 @@ namespace aasdk {
     size_t Cryptor::decrypt(common::Data &output, const common::DataConstBuffer &buffer, int frameLength) {
       int overhead = 29;
       int length = frameLength - overhead;
+      if (length < 0) {
+        // shorter than a TLS record header + nonce + tag, would be read as a huge size_t below
+        throw error::Error(error::ErrorCode::MESSENGER_FRAME_TOO_SHORT, 0,
+                           "frameLength=" + std::to_string(frameLength));
+      }
       std::lock_guard<decltype(mutex_)> lock(mutex_);
 
       this->write(buffer);

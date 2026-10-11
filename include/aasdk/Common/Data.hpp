@@ -68,6 +68,9 @@ namespace aasdk {
 
     template<typename DataType>
     void copy(DataType &data, const DataBuffer &buffer) {
+      if (buffer.size == 0) {
+        return;
+      }
       size_t offset = data.size();
       data.resize(data.size() + buffer.size);
       memcpy(&data[offset], buffer.data, buffer.size);
@@ -75,6 +78,9 @@ namespace aasdk {
 
     template<typename DataType>
     void copy(DataType &data, const DataConstBuffer &buffer) {
+      if (buffer.size == 0) {
+        return;
+      }
       size_t offset = data.size();
       data.resize(data.size() + buffer.size);
       memcpy(&data[offset], buffer.cdata, buffer.size);

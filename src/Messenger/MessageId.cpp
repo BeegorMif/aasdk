@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <boost/endian/conversion.hpp>
 #include <aasdk/Messenger/MessageId.hpp>
+#include <aasdk/Error/Error.hpp>
 
 
 namespace aasdk::messenger {
@@ -28,7 +29,11 @@ namespace aasdk::messenger {
   }
 
   MessageId::MessageId(const common::Data &data) {
-    id_ = boost::endian::big_to_native(reinterpret_cast<const uint16_t &>(data[0]));
+    // MessageInStream only delivers messages with an id, this guards other callers
+    if (data.size() < sizeof(id_)) {
+      throw error::Error(error::ErrorCode::MESSENGER_MESSAGE_TOO_SHORT);
+    }
+    id_ = boost::endian::load_big_u16(data.data());
   }
 
   uint16_t MessageId::getId() const {
