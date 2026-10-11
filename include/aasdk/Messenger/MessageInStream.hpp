@@ -18,6 +18,7 @@
 #pragma once
 
 #include <map>
+#include <aasdk/Error/Error.hpp>
 #include <aasdk/Transport/ITransport.hpp>
 #include <aasdk/Messenger/IMessageInStream.hpp>
 #include <aasdk/Messenger/ICryptor.hpp>
@@ -37,6 +38,11 @@ namespace aasdk {
 
       void startReceive(ReceivePromise::Pointer promise) override;
 
+      // A message reassembled from FIRST/MIDDLE/LAST frames may not exceed this size, and all partially
+      // received messages together may not exceed cMaxBufferedSize (a peer could grow them without end).
+      static constexpr size_t cMaxMessageSize = 16 * 1024 * 1024;
+      static constexpr size_t cMaxBufferedSize = 32 * 1024 * 1024;
+
     private:
       using std::enable_shared_from_this<MessageInStream>::shared_from_this;
 
@@ -45,6 +51,11 @@ namespace aasdk {
       void receiveFrameSizeHandler(const common::DataConstBuffer &buffer);
 
       void receiveFramePayloadHandler(const common::DataConstBuffer &buffer);
+
+      // Drops the message being received and rejects the receive promise.
+      void rejectMessage(const error::Error &e);
+
+      size_t bufferedSize() const;
 
       boost::asio::io_service::strand strand_;
       transport::ITransport::Pointer transport_;
@@ -56,6 +67,8 @@ namespace aasdk {
       Message::Pointer message_;
 
       std::map<messenger::ChannelId, Message::Pointer> messageBuffer_;
+      // Total size announced by the FIRST frame of the message being reassembled on a channel
+      std::map<messenger::ChannelId, size_t> announcedSize_;
 
       int frameSize_;
       bool isValidFrame_;

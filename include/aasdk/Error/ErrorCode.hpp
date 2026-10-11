@@ -57,7 +57,13 @@ namespace aasdk {
       OPERATION_ABORTED = 30,
       OPERATION_IN_PROGRESS = 31,
       PARSE_PAYLOAD = 32,
-      TCP_TRANSFER = 33
+      TCP_TRANSFER = 33,
+      // multi-frame message larger than announced or above the limit (MessageInStream)
+      MESSENGER_MESSAGE_TOO_LARGE = 34,
+      // message without the 2 byte message id
+      MESSENGER_MESSAGE_TOO_SHORT = 35,
+      // encrypted frame shorter than the TLS record overhead
+      MESSENGER_FRAME_TOO_SHORT = 36
     };
 
   }

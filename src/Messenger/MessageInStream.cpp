@@ -48,7 +48,7 @@ namespace aasdk::messenger {
 
         transport_->receive(FrameHeader::getSizeOf(), std::move(transportPromise));
       } else {
-        promise_.reset();
+        // promise_ belongs to the receive that is still running, only the new one is rejected
         AASDK_LOG_MESSENGER(debug, "Already Handling Promise");
         promise->reject(error::Error(error::ErrorCode::OPERATION_IN_PROGRESS));
       }
@@ -75,6 +75,7 @@ namespace aasdk::messenger {
       if (frameHeader.getType() == FrameType::FIRST || frameHeader.getType() == FrameType::BULK) {
         // If it's first or bulk, we need to override the message anyhow, so we will start again.
         // Need to start a new message anyhow
+        announcedSize_.erase(frameHeader.getChannelId());
         message_ = std::make_shared<Message>(frameHeader.getChannelId(), frameHeader.getEncryptionType(),
                                              frameHeader.getMessageType());
       }
@@ -113,6 +114,17 @@ namespace aasdk::messenger {
   }
 
   void MessageInStream::receiveFrameSizeHandler(const common::DataConstBuffer &buffer) {
+    FrameSize frameSize(buffer);
+    if (thisFrameType_ == FrameType::FIRST) {
+      if (frameSize.getTotalSize() > cMaxMessageSize) {
+        AASDK_LOG(error) << "[MessageInStream] Rejecting message of " << frameSize.getTotalSize() << " bytes on channel "
+                         << channelIdToString(message_->getChannelId());
+        this->rejectMessage(error::Error(error::ErrorCode::MESSENGER_MESSAGE_TOO_LARGE));
+        return;
+      }
+      announcedSize_[message_->getChannelId()] = frameSize.getTotalSize();
+    }
+
     auto transportPromise = transport::ITransport::ReceivePromise::defer(strand_);
     transportPromise->then(
         [this, self = this->shared_from_this()](common::Data data) mutable {
@@ -125,7 +137,6 @@ namespace aasdk::messenger {
           promise_.reset();
         });
 
-    FrameSize frameSize(buffer);
     frameSize_ = (int) frameSize.getFrameSize();
     transport_->receive(frameSize.getFrameSize(), std::move(transportPromise));
   }
@@ -146,10 +157,34 @@ namespace aasdk::messenger {
       message_->insertPayload(buffer);
     }
 
+    const auto channelId = message_->getChannelId();
+    const size_t payloadSize = message_->getPayload().size();
+    if (thisFrameType_ != FrameType::BULK) {
+      // Compared with the decrypted size: the sender announces the size of the plain message
+      // (MessageOutStream does the same), the encrypted frames are larger.
+      const auto announced = announcedSize_.find(channelId);
+      if (announced == announcedSize_.end() || payloadSize > announced->second
+          || this->bufferedSize() + payloadSize > cMaxBufferedSize) {
+        AASDK_LOG(error) << "[MessageInStream] Rejecting message on channel " << channelIdToString(channelId)
+                         << ": " << payloadSize << " bytes received, announced "
+                         << (announced == announcedSize_.end() ? 0 : announced->second);
+        this->rejectMessage(error::Error(error::ErrorCode::MESSENGER_MESSAGE_TOO_LARGE));
+        return;
+      }
+    }
+
     bool isResolved = false;
 
     // If this is the LAST frame or a BULK frame...
     if ((thisFrameType_ == FrameType::BULK || thisFrameType_ == FrameType::LAST) && isValidFrame_) {
+      announcedSize_.erase(channelId);
+      // Every message starts with its 2 byte id, the channels read it unchecked
+      if (payloadSize < sizeof(uint16_t)) {
+        AASDK_LOG(error) << "[MessageInStream] Rejecting message of " << payloadSize << " bytes on channel "
+                         << channelIdToString(channelId);
+        this->rejectMessage(error::Error(error::ErrorCode::MESSENGER_MESSAGE_TOO_SHORT));
+        return;
+      }
       AASDK_LOG_MESSENGER(debug, "Resolving message.");
       promise_->resolve(std::move(message_));
       promise_.reset();
@@ -176,6 +211,24 @@ namespace aasdk::messenger {
 
       transport_->receive(FrameHeader::getSizeOf(), std::move(transportPromise));
     }
+  }
+
+  void MessageInStream::rejectMessage(const error::Error &e) {
+    if (message_ != nullptr) {
+      announcedSize_.erase(message_->getChannelId());
+      messageBuffer_.erase(message_->getChannelId());
+      message_.reset();
+    }
+    promise_->reject(e);
+    promise_.reset();
+  }
+
+  size_t MessageInStream::bufferedSize() const {
+    size_t size = 0;
+    for (const auto &buffered: messageBuffer_) {
+      size += buffered.second->getPayload().size();
+    }
+    return size;
   }
 
 }

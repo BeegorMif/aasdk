@@ -46,6 +46,9 @@ namespace aasdk {
 
       void doSend();
 
+      // Starts the next receive of the in-stream unless one is already running
+      void startInStreamReceive();
+
       void inStreamMessageHandler(Message::Pointer message);
 
       void outStreamMessageHandler(ChannelSendQueue::iterator queueElement);
@@ -62,6 +65,8 @@ namespace aasdk {
       ChannelReceivePromiseQueue channelReceivePromiseQueue_;
       ChannelReceiveMessageQueue channelReceiveMessageQueue_;
       ChannelSendQueue channelSendPromiseQueue_;
+      // A receive of messageInStream_ is running (the promise queue counts channels, not promises)
+      bool inStreamReceiving_ = false;
 
     };
 
