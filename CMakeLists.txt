@@ -4,7 +4,9 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-project(aasdk)
+# Version of the OpenHU fork (branch openhu): bump the minor version for new API,
+# the major version for breaking changes. Releases are tagged openhu-v<version>.
+project(aasdk VERSION 1.0.0)
 message(STATUS "AASDK Library")
 message(STATUS "Cross Compiling?")
 
@@ -102,13 +104,9 @@ if(AASDK_VERSION_OVERRIDE)
 endif()
 
 if(NOT AASDK_HAS_VERSION_OVERRIDE)
-    # Date-based semantic versioning fallback.
-    string(TIMESTAMP LIBRARY_BUILD_YEAR "%Y" UTC)
-    string(TIMESTAMP LIBRARY_BUILD_MONTH "%m" UTC)
-    string(TIMESTAMP LIBRARY_BUILD_DAY "%d" UTC)
-    set(LIBRARY_BUILD_MAJOR_RELEASE ${LIBRARY_BUILD_YEAR})
-    set(LIBRARY_BUILD_MINOR_RELEASE ${LIBRARY_BUILD_MONTH})
-    set(LIBRARY_BUILD_PATCH_RELEASE ${LIBRARY_BUILD_DAY})
+    set(LIBRARY_BUILD_MAJOR_RELEASE ${PROJECT_VERSION_MAJOR})
+    set(LIBRARY_BUILD_MINOR_RELEASE ${PROJECT_VERSION_MINOR})
+    set(LIBRARY_BUILD_PATCH_RELEASE ${PROJECT_VERSION_PATCH})
 endif()
 
 # Set CMAKE_MODULE_PATH early so we can include gitversion.cmake
@@ -311,7 +309,7 @@ endif()
 # Link libraries - aap_protobuf is always built as subdirectory
 target_link_libraries(aasdk PUBLIC
     ${LIBUSB_1_LIBRARIES}
-    ${Boost_LIBRARIES}
+    Boost::system Boost::log_setup Boost::log
     aap_protobuf
     ${OPENSSL_LIBRARIES}
     ${WINSOCK2_LIBRARIES}
@@ -364,7 +362,7 @@ configure_file(
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
 set_target_properties(aasdk
-        PROPERTIES VERSION ${LIBRARY_VERSION_STRING} SOVERSION ${LIBRARY_BUILD_MAJOR_RELEASE})
+        PROPERTIES VERSION ${AASDK_BASE_VERSION} SOVERSION ${LIBRARY_BUILD_MAJOR_RELEASE})
 
 # Install rules
 install(TARGETS aasdk
@@ -430,8 +428,8 @@ install(EXPORT aasdkTargets
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/aasdkConfigVersion.cmake"
-        VERSION 1.0
-        COMPATIBILITY AnyNewerVersion
+        VERSION ${AASDK_BASE_VERSION}
+        COMPATIBILITY SameMajorVersion
 )
 
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
@@ -555,7 +553,8 @@ else()
     set(_full_package_version "${LIBRARY_VERSION_STRING}")
 endif()
 
-set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS "${CPACK_PACKAGE_NAME} (= ${_full_package_version})")
+# aasdkConfig.cmake and the exported targets need the -dev packages of the public dependencies
+set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS "${CPACK_PACKAGE_NAME} (= ${_full_package_version}), libboost-system-dev, libboost-log-dev, libprotobuf-dev, protobuf-compiler, libusb-1.0-0-dev, libssl-dev")
 
 # Package relationships
 set(CPACK_COMPONENT_DEVELOPMENT_DEPENDS runtime)

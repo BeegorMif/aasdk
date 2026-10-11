@@ -12,3 +12,4 @@ libusb-1.0-0-dev
 libssl-dev
 libabsl-dev
 file
+lsb-release

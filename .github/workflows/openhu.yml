@@ -1,0 +1,110 @@
+# Packages of the OpenHU fork (branch openhu): libaasdk and libaasdk-dev for Debian trixie, amd64 and arm64.
+# A tag openhu-v<version> (must match project(aasdk VERSION ...) in CMakeLists.txt) publishes them
+# as a GitHub release and tells OpenHU CI to build against the new aasdk.
+name: OpenHU packages
+
+on:
+  push:
+    branches: [openhu]
+    tags: ['openhu-v*']
+  pull_request:
+    branches: [openhu]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Release builds get exactly the tag version, all others 1.2.0+git.<sha> from CMake
+      - name: Version
+        id: version
+        run: |
+          version=$(sed -nE 's/^project\(aasdk VERSION ([0-9]+\.[0-9]+\.[0-9]+)\)/\1/p' CMakeLists.txt)
+          [ -n "$version" ] || { echo "::error::project(aasdk VERSION ...) not found in CMakeLists.txt"; exit 1; }
+          if [[ "$GITHUB_REF" == refs/tags/openhu-v* ]]; then
+            tag="${GITHUB_REF#refs/tags/openhu-v}"
+            if [ "$tag" != "$version" ]; then
+              echo "::error::Tag openhu-v$tag does not match project(aasdk VERSION $version)"
+              exit 1
+            fi
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          fi
+          echo "aasdk $version" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build, test and package (Debian trixie, ${{ matrix.arch }})
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          docker run --rm -e VERSION -e OWNER="$(id -u):$(id -g)" -v "$PWD:/src" -w /src debian:trixie-slim bash -c '
+            set -euo pipefail
+            bash ./build.sh --install-deps
+            git config --global --add safe.directory /src
+            release=$(bash scripts/distro_release.sh)
+            CMAKE_EXTRA_ARGS="-DCPACK_DEBIAN_PACKAGE_RELEASE=$release" BUILD_DIR=build BUILD_TESTS=ON \
+              bash ./build.sh release package --skip-protobuf --skip-absl
+            chown -R "$OWNER" build'
+          for deb in build/packages/*.deb; do
+            dpkg-deb -f "$deb" Package Version Architecture | paste -sd " " >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aasdk-trixie-${{ matrix.arch }}
+          path: build/packages/*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/openhu-v')
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: aasdk-trixie-*
+          path: packages
+          merge-multiple: true
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd packages && sha256sum *.deb > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "aasdk ${{ needs.version.outputs.version }} (OpenHU)" --generate-notes \
+            *.deb SHA256SUMS
+
+      # Needs the secret OPENHU_DISPATCH_TOKEN: fine-grained token with Contents read/write on average-web-dev/openhu
+      - name: Notify OpenHU
+        env:
+          GH_TOKEN: ${{ secrets.OPENHU_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::OPENHU_DISPATCH_TOKEN not set, OpenHU CI is not notified"
+            exit 0
+          fi
+          gh api repos/average-web-dev/openhu/dispatches -f event_type=aasdk-release \
+            -f "client_payload[version]=${{ needs.version.outputs.version }}"

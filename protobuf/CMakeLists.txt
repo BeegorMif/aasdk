@@ -11,12 +11,7 @@ if(DEFINED LIBRARY_BUILD_MAJOR_RELEASE AND DEFINED LIBRARY_BUILD_MINOR_RELEASE A
     set(AAP_VERSION_MINOR ${LIBRARY_BUILD_MINOR_RELEASE}) 
     set(AAP_VERSION_PATCH ${LIBRARY_BUILD_PATCH_RELEASE})
     
-    # Use parent project's version string if available
-    if(DEFINED LIBRARY_VERSION_STRING)
-        set(LIBRARY_BUILD_VERSION_STRING ${LIBRARY_VERSION_STRING})
-    else()
-        set(LIBRARY_BUILD_VERSION_STRING "${AAP_VERSION_MAJOR}.${AAP_VERSION_MINOR}.${AAP_VERSION_PATCH}")
-    endif()
+    set(LIBRARY_BUILD_VERSION_STRING "${AAP_VERSION_MAJOR}.${AAP_VERSION_MINOR}.${AAP_VERSION_PATCH}")
 else()
     # Fallback to original versioning for standalone builds
     set(LIBRARY_BUILD_DATE "20241121")    # Binary Release Build Date
@@ -86,7 +81,6 @@ include_directories(
         ${PROTOBUF_INCLUDE_DIR}
 )
 
-set(LIBRARY_BUILD_VERSION_STRING "${LIBRARY_BUILD_MAJOR_RELEASE}.${LIBRARY_BUILD_MINOR_RELEASE}.${LIBRARY_BUILD_INCREMENTAL}+${LIBRARY_BUILD_DATE}")
 message(STATUS "aap_protobuf Project Version: ${LIBRARY_BUILD_VERSION_STRING}")
 
 # Set version properties
@@ -135,8 +129,8 @@ install(EXPORT aap_protobufTargets
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/aap_protobufConfigVersion.cmake"
-        VERSION 1.0
-        COMPATIBILITY AnyNewerVersion
+        VERSION ${LIBRARY_BUILD_VERSION_STRING}
+        COMPATIBILITY SameMajorVersion
 )
 
 configure_package_config_file(Config.cmake.in

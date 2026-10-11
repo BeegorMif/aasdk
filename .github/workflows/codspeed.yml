@@ -6,6 +6,7 @@ on:
       - main
       - newdev
   pull_request:
+    branches: [main, newdev]
   workflow_dispatch:
 
 permissions:

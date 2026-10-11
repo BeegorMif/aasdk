@@ -1,3 +1,10 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# AASDK::aasdk links AAPProto::aap_protobuf and the Boost targets
+find_dependency(aap_protobuf @AASDK_BASE_VERSION@ EXACT CONFIG PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH)
+find_dependency(Boost CONFIG COMPONENTS system log_setup log)
+
 set(AASDK_INCLUDE_DIRS @CMAKE_INSTALL_FULL_INCLUDEDIR@)
 set(AASDK_LIB_DIRS @CMAKE_INSTALL_FULL_LIBDIR@)
 include("${CMAKE_CURRENT_LIST_DIR}/aasdkTargets.cmake")
