@@ -50,7 +50,7 @@ namespace aasdk {
 
       IUSBWrapper &usbWrapper_;
       DeviceHandle handle_;
-      const libusb_interface_descriptor *interfaceDescriptor_;
+      uint8_t interfaceNumber_;
       IUSBEndpoint::Pointer inEndpoint_;
       IUSBEndpoint::Pointer outEndpoint_;
 

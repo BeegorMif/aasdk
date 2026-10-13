@@ -71,6 +71,51 @@ TEST(AOAPDevice_UnitTest, AOAPDevice_InEndpointFirst)
     EXPECT_TRUE(endpointDescriptor[1].bEndpointAddress == aoapDevice.getOutEndpoint().getAddress());
 }
 
+TEST(AOAPDevice_UnitTest, AOAPDevice_CreateKeepsNoPointerIntoConfigDescriptor)
+{
+    USBWrapperMock usbWrapperMock;
+    boost::asio::io_service ioService;
+    USBWrapperMock::DummyDeviceHandle dummyDeviceHandle;
+    DeviceHandle deviceHandle(reinterpret_cast<libusb_device_handle*>(&dummyDeviceHandle), [](auto*) {});
+
+    // a config descriptor on the heap that is freed when its handle goes, like libusb_free_config_descriptor
+    struct Descriptor
+    {
+        libusb_endpoint_descriptor endpoints[2]{};
+        libusb_interface_descriptor altsetting{};
+        libusb_interface interface{};
+        libusb_config_descriptor config{};
+    };
+    auto descriptor = new Descriptor;
+    descriptor->endpoints[0].bEndpointAddress = LIBUSB_ENDPOINT_IN + 4;
+    descriptor->endpoints[1].bEndpointAddress = LIBUSB_ENDPOINT_OUT + 6;
+    descriptor->altsetting.bInterfaceNumber = 55;
+    descriptor->altsetting.bNumEndpoints = 2;
+    descriptor->altsetting.endpoint = descriptor->endpoints;
+    descriptor->interface.altsetting = &descriptor->altsetting;
+    descriptor->interface.num_altsetting = 1;
+    descriptor->config.bNumInterfaces = 1;
+    descriptor->config.interface = &descriptor->interface;
+    ConfigDescriptorHandle configDescriptorHandle(&descriptor->config, [descriptor](auto*) { delete descriptor; });
+
+    EXPECT_CALL(usbWrapperMock, getDevice(deviceHandle)).WillOnce(testing::Return(nullptr));
+    // hand over the only reference: create() frees the descriptor when it returns
+    EXPECT_CALL(usbWrapperMock, getConfigDescriptor(nullptr, 0, testing::_))
+        .WillOnce(testing::Invoke([&configDescriptorHandle](libusb_device*, uint8_t, ConfigDescriptorHandle& handle) {
+            handle = std::move(configDescriptorHandle);
+            return 0;
+        }));
+    EXPECT_CALL(usbWrapperMock, claimInterface(deviceHandle, 55)).WillOnce(testing::Return(0));
+
+    auto aoapDevice = AOAPDevice::create(usbWrapperMock, ioService, deviceHandle);
+    EXPECT_EQ(aoapDevice->getInEndpoint().getAddress(), LIBUSB_ENDPOINT_IN + 4);
+    EXPECT_EQ(aoapDevice->getOutEndpoint().getAddress(), LIBUSB_ENDPOINT_OUT + 6);
+
+    // the descriptor is freed now; the destructor still has to release interface 55
+    EXPECT_CALL(usbWrapperMock, releaseInterface(deviceHandle, 55));
+    aoapDevice.reset();
+}
+
 }
 }
 }

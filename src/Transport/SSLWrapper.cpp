@@ -18,10 +18,8 @@
 #include <string>
 #include <cerrno>
 #include <cstring>
-#include <openssl/engine.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
-#include <openssl/conf.h>
 #include <aasdk/Transport/SSLWrapper.hpp>
 #include <aasdk/Common/Log.hpp>
 #include <aasdk/Common/ModernLogger.hpp>
@@ -59,23 +57,17 @@ namespace aasdk {
     }
 
     SSLWrapper::SSLWrapper() {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
       SSL_library_init();
-      SSL_load_error_strings(); // Optional: Can also be removed if not needed.
+      SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
+#endif
+      // OpenSSL 1.1 and newer initialise themselves and clean up at exit
     }
 
     SSLWrapper::~SSLWrapper() {
-#ifdef FIPS_mode_set
-      FIPS_mode_set(0); // FIPS_mode_set removed in later versions of OpenSSL.
-#endif
-      ENGINE_cleanup();
-      CONF_modules_unload(1);
-      EVP_cleanup();
-      CRYPTO_cleanup_all_ex_data();
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-      ERR_remove_state(0);
-#endif
-      ERR_free_strings();
+      // Nothing global is cleaned up here: every connection has its own SSLWrapper, and freeing
+      // OpenSSL's global state (CONF_modules_unload, ...) would pull it from under another one.
     }
 
     X509 *SSLWrapper::readCertificate(const std::string &certificate) {
