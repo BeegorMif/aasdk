@@ -28,6 +28,15 @@ public:
     MOCK_METHOD1(onPingRequest, void(const aap_protobuf::service::control::message::PingRequest& request));
     MOCK_METHOD1(onPingResponse, void(const aap_protobuf::service::control::message::PingResponse& response));
     MOCK_METHOD1(onChannelError, void(const error::Error& e));
+    MOCK_METHOD1(onVersionResponseOptions, void(const aap_protobuf::service::control::message::VersionResponseOptions&));
+    MOCK_METHOD1(onChannelCloseNotification, void(const aap_protobuf::service::control::message::ChannelCloseNotification&));
+    MOCK_METHOD1(onServiceDiscoveryUpdate, void(const aap_protobuf::service::control::message::ServiceDiscoveryUpdate&));
+    MOCK_METHOD1(onCallAvailabilityStatus, void(const aap_protobuf::service::control::message::CallAvailabilityStatus&));
+    MOCK_METHOD1(onCarConnectedDevicesRequest, void(const aap_protobuf::service::control::message::CarConnectedDevicesRequest&));
+    MOCK_METHOD1(onCarConnectedDevices, void(const aap_protobuf::service::control::message::CarConnectedDevices&));
+    MOCK_METHOD1(onUserSwitchRequest, void(const aap_protobuf::service::control::message::UserSwitchRequest&));
+    MOCK_METHOD1(onUserSwitchResponse, void(const aap_protobuf::service::control::message::UserSwitchResponse&));
+    MOCK_METHOD1(onUnexpectedMessage, void(const common::DataConstBuffer&));
 };
 
 }

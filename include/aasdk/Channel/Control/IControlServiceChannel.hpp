@@ -86,6 +86,22 @@ namespace aasdk::channel::control {
     virtual void
     sendPingResponse(const aap_protobuf::service::control::message::PingResponse &response,
                      SendPromise::Pointer promise) = 0;
+
+    // Messages of protocol 1.6 and later (#7); which side sends them is not confirmed by captures yet
+
+    virtual void sendServiceDiscoveryUpdate(const aap_protobuf::service::control::message::ServiceDiscoveryUpdate &update, SendPromise::Pointer promise) = 0;
+
+    virtual void sendCallAvailabilityStatus(const aap_protobuf::service::control::message::CallAvailabilityStatus &status, SendPromise::Pointer promise) = 0;
+
+    virtual void sendCarConnectedDevicesRequest(const aap_protobuf::service::control::message::CarConnectedDevicesRequest &request, SendPromise::Pointer promise) = 0;
+
+    virtual void sendCarConnectedDevices(const aap_protobuf::service::control::message::CarConnectedDevices &devices, SendPromise::Pointer promise) = 0;
+
+    virtual void sendUserSwitchRequest(const aap_protobuf::service::control::message::UserSwitchRequest &request, SendPromise::Pointer promise) = 0;
+
+    virtual void sendUserSwitchResponse(const aap_protobuf::service::control::message::UserSwitchResponse &response, SendPromise::Pointer promise) = 0;
+
+    virtual void sendChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &notification, SendPromise::Pointer promise) = 0;
   };
 }
 

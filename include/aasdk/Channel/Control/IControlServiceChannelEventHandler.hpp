@@ -29,6 +29,14 @@
 #include <aap_protobuf/service/control/message/ServiceDiscoveryRequest.pb.h>
 #include <aap_protobuf/service/control/message/VoiceSessionNotification.pb.h>
 #include <aap_protobuf/shared/MessageStatus.pb.h>
+#include <aap_protobuf/service/control/message/CallAvailabilityStatus.pb.h>
+#include <aap_protobuf/service/control/message/CarConnectedDevices.pb.h>
+#include <aap_protobuf/service/control/message/CarConnectedDevicesRequest.pb.h>
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
+#include <aap_protobuf/service/control/message/ServiceDiscoveryUpdate.pb.h>
+#include <aap_protobuf/service/control/message/UserSwitchRequest.pb.h>
+#include <aap_protobuf/service/control/message/UserSwitchResponse.pb.h>
+#include <aap_protobuf/service/control/message/VersionResponseOptions.pb.h>
 
 namespace aasdk::channel::control {
 
@@ -70,6 +78,30 @@ namespace aasdk::channel::control {
     virtual void onPingResponse(const aap_protobuf::service::control::message::PingResponse &response) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+    // Messages of protocol 1.6 and later (#7). The defaults do nothing. After each of these callbacks
+    // ControlServiceChannel keeps receiving by itself: do not call receive() in an override.
+
+    // Options the phone appends to its version response (ping and wireless TCP configuration, #5);
+    // called before onVersionResponse.
+    virtual void onVersionResponseOptions(const aap_protobuf::service::control::message::VersionResponseOptions &) {}
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
+
+    virtual void onServiceDiscoveryUpdate(const aap_protobuf::service::control::message::ServiceDiscoveryUpdate &) {}
+
+    virtual void onCallAvailabilityStatus(const aap_protobuf::service::control::message::CallAvailabilityStatus &) {}
+
+    virtual void onCarConnectedDevicesRequest(const aap_protobuf::service::control::message::CarConnectedDevicesRequest &) {}
+
+    virtual void onCarConnectedDevices(const aap_protobuf::service::control::message::CarConnectedDevices &) {}
+
+    virtual void onUserSwitchRequest(const aap_protobuf::service::control::message::UserSwitchRequest &) {}
+
+    virtual void onUserSwitchResponse(const aap_protobuf::service::control::message::UserSwitchResponse &) {}
+
+    // The phone reports a message of ours as unexpected (MESSAGE_UNEXPECTED_MESSAGE), payload as sent
+    virtual void onUnexpectedMessage(const common::DataConstBuffer &) {}
 
 
   };
