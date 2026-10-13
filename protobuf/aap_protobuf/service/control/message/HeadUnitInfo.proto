@@ -11,4 +11,7 @@ message HeadUnitInfo {
   optional string head_unit_model = 6;
   optional string head_unit_software_build = 7;
   optional string head_unit_software_version = 8;
+  // Android Auto's vehicle type numbering. Open Headunit: the newer car service on the phone aborts the
+  // setup if a head unit announces no microphone unless it is a motorcycle (#11)
+  optional int32 vehicle_type = 9;
 }
