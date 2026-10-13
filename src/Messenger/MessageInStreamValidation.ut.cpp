@@ -43,6 +43,7 @@ using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::NiceMock;
 using ::testing::SaveArg;
+using ::testing::Return;
 
 struct ReceiveResult
 {
@@ -277,23 +278,28 @@ TEST(FrameSizeValidationUnitTest, FrameSize_ParseExtended)
     EXPECT_EQ(frameSize.getTotalSize(), 0xA1B2C3D4u);
 }
 
-TEST(CryptorValidationUnitTest, Cryptor_DecryptFrameShorterThanRecordOverhead)
+TEST(CryptorValidationUnitTest, Cryptor_DecryptFrameEndingInsideRecord)
 {
+    // OpenSSL keeps the bytes of an unfinished record and asks for more (#6)
     auto sslWrapper = std::make_shared<NiceMock<transport::ut::SSLWrapperMock>>();
-    EXPECT_CALL(*sslWrapper, sslRead(_, _, _)).Times(0);
+    ON_CALL(*sslWrapper, bioWrite(_, _, _)).WillByDefault(testing::ReturnArg<2>());
+    ON_CALL(*sslWrapper, sslRead(_, _, _)).WillByDefault(Return(-1));
+    ON_CALL(*sslWrapper, getError(_, -1)).WillByDefault(Return(SSL_ERROR_WANT_READ));
+    EXPECT_CALL(*sslWrapper, hasPending(_)).WillOnce(Return(true));
 
     Cryptor cryptor(sslWrapper);
     common::Data output;
-    const common::Data frame(10, 0x00);
+    const common::Data frame(10, 0x17);
     try
     {
         cryptor.decrypt(output, common::DataConstBuffer(frame), static_cast<int>(frame.size()));
-        FAIL() << "no error for a 10 byte frame";
+        FAIL() << "no error for a frame that ends inside a TLS record";
     }
     catch(const error::Error& e)
     {
         EXPECT_EQ(e.getCode(), error::ErrorCode::MESSENGER_FRAME_TOO_SHORT);
     }
+    EXPECT_TRUE(output.empty());
 }
 
 }

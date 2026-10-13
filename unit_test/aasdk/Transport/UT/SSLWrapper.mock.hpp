@@ -38,6 +38,7 @@ public:
     MOCK_METHOD3(sslRead, int(SSL* ssl, void* buf, int num));
     MOCK_METHOD3(sslWrite, int(SSL* ssl, const void* buf, int num));
     MOCK_METHOD2(getError, int(SSL* ssl, int returnCode));
+    MOCK_METHOD1(hasPending, bool(const SSL* ssl));
 };
 
 }

@@ -80,6 +80,9 @@ namespace aasdk {
       virtual int sslWrite(SSL *ssl, const void *buf, int num) = 0;
 
       virtual int getError(SSL *ssl, int returnCode) = 0;
+
+      // true while the SSL object holds bytes of a TLS record it could not finish yet
+      virtual bool hasPending(const SSL *ssl) = 0;
     };
 
   }

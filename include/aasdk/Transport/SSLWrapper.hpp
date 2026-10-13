@@ -76,6 +76,8 @@ namespace aasdk {
       int sslRead(SSL *ssl, void *buf, int num) override;
 
       int sslWrite(SSL *ssl, const void *buf, int num) override;
+
+      bool hasPending(const SSL *ssl) override;
     };
 
   }

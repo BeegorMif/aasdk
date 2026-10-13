@@ -182,6 +182,10 @@ namespace aasdk {
       return SSL_pending(ssl);
     }
 
+    bool SSLWrapper::hasPending(const SSL *ssl) {
+      return SSL_has_pending(ssl) == 1;
+    }
+
     int SSLWrapper::sslRead(SSL *ssl, void *buf, int num) {
       return SSL_read(ssl, buf, num);
     }
@@ -193,6 +197,11 @@ namespace aasdk {
     int SSLWrapper::getError(SSL *ssl, int returnCode) {
       const int sslErrorCode = SSL_get_error(ssl, returnCode);
       const int savedErrno = errno;
+
+      // WANT_READ/WANT_WRITE are no errors: Cryptor::decrypt ends every frame with WANT_READ
+      if (sslErrorCode == SSL_ERROR_WANT_READ || sslErrorCode == SSL_ERROR_WANT_WRITE) {
+        return sslErrorCode;
+      }
 
       AASDK_LOG(error) << "[SSLWrapper] getError returnCode=" << returnCode
                        << " ssl_error=" << sslErrorCode

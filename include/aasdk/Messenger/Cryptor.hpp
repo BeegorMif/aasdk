@@ -59,6 +59,7 @@ namespace aasdk {
       transport::ISSLWrapper::BIOs bIOs_;
       bool isActive_;
 
+      static constexpr size_t cReadChunkSize = 2048;
       const static std::string cCertificate;
       const static std::string cPrivateKey;
       mutable std::mutex mutex_;

@@ -62,7 +62,7 @@ namespace aasdk {
       MESSENGER_MESSAGE_TOO_LARGE = 34,
       // message without the 2 byte message id
       MESSENGER_MESSAGE_TOO_SHORT = 35,
-      // encrypted frame shorter than the TLS record overhead
+      // encrypted frame that ends inside a TLS record
       MESSENGER_FRAME_TOO_SHORT = 36
     };
 
