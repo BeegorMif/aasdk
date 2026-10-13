@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with aasdk. If not, see <http://www.gnu.org/licenses/>.
 
+#include <cstdlib>
+#include <cstdio>
 #include <boost/endian/conversion.hpp>
 #include <aasdk/Version.hpp>
 #include <aasdk/IO/PromiseLink.hpp>
@@ -27,6 +29,20 @@
 namespace aasdk {
   namespace channel {
     namespace control {
+
+      namespace {
+        // AASDK_VERSION=<major>.<minor> asks the phone for another protocol version, for captures of what
+        // newer versions change (#14). The phone selects the version it uses in its response.
+        std::pair<uint16_t, uint16_t> requestedVersion() {
+          const char *value = std::getenv("AASDK_VERSION");
+          unsigned major = 0, minor = 0;
+          if (value != nullptr && std::sscanf(value, "%u.%u", &major, &minor) == 2 && major <= 0xFFFF && minor <= 0xFFFF) {
+            AASDK_LOG(info) << "[ControlServiceChannel] AASDK_VERSION: requesting version " << major << "." << minor;
+            return {static_cast<uint16_t>(major), static_cast<uint16_t>(minor)};
+          }
+          return {AASDK_MAJOR, AASDK_MINOR};
+        }
+      }
 
       ControlServiceChannel::ControlServiceChannel(boost::asio::io_service::strand &strand,
                                                    messenger::IMessenger::Pointer messenger)
@@ -44,8 +60,9 @@ namespace aasdk {
                 aap_protobuf::service::control::message::ControlMessageType::MESSAGE_VERSION_REQUEST).getData());
 
         common::Data versionBuffer(4, 0);
-        boost::endian::store_big_u16(&versionBuffer[0], AASDK_MAJOR);
-        boost::endian::store_big_u16(&versionBuffer[2], AASDK_MINOR);
+        const auto version = requestedVersion();
+        boost::endian::store_big_u16(&versionBuffer[0], version.first);
+        boost::endian::store_big_u16(&versionBuffer[2], version.second);
         message->insertPayload(versionBuffer);
         this->send(std::move(message), std::move(promise));
       }
