@@ -16,6 +16,7 @@
 // along with aasdk. If not, see <http://www.gnu.org/licenses/>.#include <boost/endian/conversion.hpp>
 #include <aasdk/Error/Error.hpp>
 #include <aasdk/Messenger/Messenger.hpp>
+#include <aasdk/Messenger/Capture.hpp>
 #include <aasdk/Common/Log.hpp>
 #include <aasdk/Common/ModernLogger.hpp>
 
@@ -46,6 +47,7 @@ namespace aasdk::messenger {
   }
 
   void Messenger::enqueueSend(Message::Pointer message, SendPromise::Pointer promise) {
+    capture::record("out", *message);
     sendStrand_.dispatch(
         [this, self = this->shared_from_this(), message = std::move(message), promise = std::move(promise)]() mutable {
           channelSendPromiseQueue_.emplace_back(std::make_pair(std::move(message), std::move(promise)));
@@ -71,6 +73,7 @@ namespace aasdk::messenger {
 
   void Messenger::inStreamMessageHandler(Message::Pointer message) {
     inStreamReceiving_ = false;
+    capture::record("in", *message);
     auto channelId = message->getChannelId();
     AASDK_LOG(debug) << "[Messenger::inStreamMessageHandler] Handling message for ChannelId "
                      << channelIdToString(message->getChannelId());
