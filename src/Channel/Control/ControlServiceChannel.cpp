@@ -44,8 +44,8 @@ namespace aasdk {
                 aap_protobuf::service::control::message::ControlMessageType::MESSAGE_VERSION_REQUEST).getData());
 
         common::Data versionBuffer(4, 0);
-        reinterpret_cast<uint16_t &>(versionBuffer[0]) = boost::endian::native_to_big(AASDK_MAJOR);
-        reinterpret_cast<uint16_t &>(versionBuffer[2]) = boost::endian::native_to_big(AASDK_MINOR);
+        boost::endian::store_big_u16(&versionBuffer[0], AASDK_MAJOR);
+        boost::endian::store_big_u16(&versionBuffer[2], AASDK_MINOR);
         message->insertPayload(versionBuffer);
         this->send(std::move(message), std::move(promise));
       }
@@ -239,15 +239,22 @@ namespace aasdk {
                                                         IControlServiceChannelEventHandler::Pointer eventHandler) {
         AASDK_LOG_CHANNEL_CONTROL(debug, "handleVersionResponse()");
 
-        //const size_t elements = payload.size / sizeof(uint16_t);
-        const uint16_t *versionResponse = reinterpret_cast<const uint16_t *>(payload.cdata);
+        // major, minor and status, each a big-endian uint16 (#5); VersionResponseOptions may follow
+        if (payload.size < 3 * sizeof(uint16_t)) {
+          AASDK_LOG(error) << "[ControlServiceChannel] Version response of " << payload.size << " bytes, expected 6";
+          eventHandler->onChannelError(error::Error(error::ErrorCode::PARSE_PAYLOAD));
+          return;
+        }
 
-        aap_protobuf::shared::MessageStatus status = static_cast<aap_protobuf::shared::MessageStatus>(boost::endian::big_to_native(
-            versionResponse[2]));
-        AASDK_LOG(info) << "[ControlServiceChannel] Handling Version - Major: " << versionResponse[0] << " Minor: "
-                        << versionResponse[1] << "Status: " << status;
+        const uint16_t major = boost::endian::load_big_u16(payload.cdata);
+        const uint16_t minor = boost::endian::load_big_u16(payload.cdata + 2);
+        // MessageStatus is signed: 0xFFFF is STATUS_NO_COMPATIBLE_VERSION (-1)
+        const auto status = static_cast<aap_protobuf::shared::MessageStatus>(
+            static_cast<int16_t>(boost::endian::load_big_u16(payload.cdata + 4)));
+        AASDK_LOG(info) << "[ControlServiceChannel] Handling Version - Major: " << major << " Minor: " << minor
+                        << " Status: " << status;
 
-        eventHandler->onVersionResponse(versionResponse[0], versionResponse[1], status);
+        eventHandler->onVersionResponse(major, minor, status);
       }
 
       void ControlServiceChannel::handleServiceDiscoveryRequest(const common::DataConstBuffer &payload,
