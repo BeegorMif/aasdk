@@ -115,7 +115,7 @@ TEST_F(ControlServiceChannelUnitTest, VersionRequest_BigEndianValues)
     channel_->sendVersionRequest(SendPromise::defer(ioService_));
     ASSERT_NE(message, nullptr);
 
-    const common::Data expected{0x00, 0x01, 0x00, 0x06};
+    const common::Data expected{0x00, 0x05, 0x00, 0x01};
     const auto& payload = message->getPayload();
     ASSERT_EQ(payload.size(), 6u);
     EXPECT_EQ(common::Data(payload.begin() + 2, payload.end()), expected);
@@ -123,14 +123,14 @@ TEST_F(ControlServiceChannelUnitTest, VersionRequest_BigEndianValues)
 
 TEST_F(ControlServiceChannelUnitTest, VersionRequest_FromEnvironment)
 {
-    ::setenv("AASDK_VERSION", "5.1", 1);
+    ::setenv("AASDK_VERSION", "6.1", 1);
     messenger::Message::Pointer message;
     EXPECT_CALL(*messenger_, enqueueSend(_, _)).WillOnce(SaveArg<0>(&message));
     channel_->sendVersionRequest(SendPromise::defer(ioService_));
     ::unsetenv("AASDK_VERSION");
     ASSERT_NE(message, nullptr);
 
-    const common::Data expected{0x00, 0x05, 0x00, 0x01};
+    const common::Data expected{0x00, 0x06, 0x00, 0x01};
     const auto& payload = message->getPayload();
     EXPECT_EQ(common::Data(payload.begin() + 2, payload.end()), expected);
 }
@@ -144,7 +144,7 @@ TEST_F(ControlServiceChannelUnitTest, VersionRequest_InvalidEnvironmentIgnored)
     ::unsetenv("AASDK_VERSION");
     ASSERT_NE(message, nullptr);
 
-    const common::Data expected{0x00, 0x01, 0x00, 0x06};
+    const common::Data expected{0x00, 0x05, 0x00, 0x01};
     const auto& payload = message->getPayload();
     EXPECT_EQ(common::Data(payload.begin() + 2, payload.end()), expected);
 }
