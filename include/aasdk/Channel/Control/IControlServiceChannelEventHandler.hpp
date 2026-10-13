@@ -21,12 +21,14 @@
 #include <aasdk/Common/Data.hpp>
 #include <aap_protobuf/service/control/message/AudioFocusRequest.pb.h>
 #include <aap_protobuf/service//control/message/BatteryStatusNotification.pb.h>
+#include <aap_protobuf/service/control/message/ByeByeRequest.pb.h>
 #include <aap_protobuf/service/control/message/ByeByeResponse.pb.h>
 #include <aap_protobuf/service/control/message/NavFocusRequestNotification.pb.h>
 #include <aap_protobuf/service/control/message/PingRequest.pb.h>
 #include <aap_protobuf/service/control/message/PingResponse.pb.h>
 #include <aap_protobuf/service/control/message/ServiceDiscoveryRequest.pb.h>
 #include <aap_protobuf/service/control/message/VoiceSessionNotification.pb.h>
+#include <aap_protobuf/shared/MessageStatus.pb.h>
 
 namespace aasdk::channel::control {
 
