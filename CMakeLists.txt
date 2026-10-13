@@ -4,9 +4,11 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-# Version of the OpenHU fork (branch openhu): bump the minor version for new API,
-# the major version for breaking changes. Releases are tagged openhu-v<version>.
-project(aasdk VERSION 1.1.0)
+# Version of the OpenHU fork (branch openhu): the patch version for fixes that keep the ABI, the
+# minor version for new API or a changed ABI (e.g. new members in classes OpenHU creates, OpenHU
+# depends on one minor version), the major version for breaking API changes.
+# Releases are tagged openhu-v<version>.
+project(aasdk VERSION 1.2.0)
 message(STATUS "AASDK Library")
 message(STATUS "Cross Compiling?")
 
