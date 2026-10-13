@@ -2,6 +2,8 @@ syntax="proto2";
 
 package aap_protobuf.aaw;
 
+// Messages of the wireless handshake (WiFi Projection Protocol) over Bluetooth RFCOMM or TCP:
+// 2 byte length and 2 byte message id (both big endian), then the protobuf.
 enum MessageId {
   WIFI_START_REQUEST = 1;
   WIFI_INFO_REQUEST = 2;
@@ -10,4 +12,10 @@ enum MessageId {
   WIFI_VERSION_RESPONSE = 5;
   WIFI_CONNECTION_STATUS = 6;
   WIFI_START_RESPONSE = 7;
+  // keepalive in both directions, a request is answered with its payload
+  WIFI_PING_REQUEST = 8;
+  WIFI_PING_RESPONSE = 9;
+  // head unit -> phone (TCP): the endpoint the phone dialled is withdrawn
+  WIFI_CONNECTION_REJECTION = 10;
+  WIFI_SETUP_INFO = 11;
 }

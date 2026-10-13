@@ -1,7 +1,19 @@
 syntax="proto2";
 
+import "aap_protobuf/aaw/WifiChannelType.proto";
+import "aap_protobuf/aaw/WppCarInfo.proto";
+import "aap_protobuf/aaw/WifiProjectionProtocolInfo.proto";
+
 package aap_protobuf.aaw;
 
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
+// Head unit -> phone, opens the handshake. An empty request is still accepted by phones.
 message WifiVersionRequest {
-
+  optional int32 major = 1;
+  optional int32 minor = 2;
+  optional WifiChannelType supported_wifi_channel_type = 3;
+  repeated int32 supported_wifi_channels = 4;
+  optional WppCarInfo car_info = 5;
+  optional WifiProjectionProtocolInfo wpp_info = 6;
 }

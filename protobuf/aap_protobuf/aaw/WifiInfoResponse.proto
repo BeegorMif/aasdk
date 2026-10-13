@@ -5,10 +5,14 @@ import "aap_protobuf/service/wifiprojection/message/WifiSecurityMode.proto";
 
 package aap_protobuf.aaw;
 
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
+// Head unit -> phone: the credentials of the head unit's network. bssid is optional: a head unit that
+// cannot read its own BSSID can still send the message.
 message WifiInfoResponse {
   required string ssid = 1;
   required string password = 2;
-  required string bssid = 3;
-  required service.wifiprojection.message.WifiSecurityMode security_mode = 4;
+  optional string bssid = 3;
+  optional service.wifiprojection.message.WifiSecurityMode security_mode = 4;
   optional service.wifiprojection.message.AccessPointType access_point_type = 5;
 }
