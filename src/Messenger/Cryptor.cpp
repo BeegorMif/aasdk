@@ -147,47 +147,42 @@ namespace aasdk {
     }
 
     size_t Cryptor::decrypt(common::Data &output, const common::DataConstBuffer &buffer, int frameLength) {
-      int overhead = 29;
-      int length = frameLength - overhead;
-      if (length < 0) {
-        // shorter than a TLS record header + nonce + tag, would be read as a huge size_t below
-        throw error::Error(error::ErrorCode::MESSENGER_FRAME_TOO_SHORT, 0,
-                           "frameLength=" + std::to_string(frameLength));
-      }
       std::lock_guard<decltype(mutex_)> lock(mutex_);
 
       this->write(buffer);
       const size_t beginOffset = output.size();
+      size_t totalReadSize = 0;
 
-      size_t totalReadSize = 0;                                                                               // Initialise
-      size_t availableBytes = length;
-      size_t readBytes = (availableBytes - totalReadSize) > 2048 ? 2048 : availableBytes -
-                                                                  totalReadSize;                     // Calculate How many Bytes to Read
-      output.resize(output.size() +
-                    readBytes);                                                               // Resize Output to match the bytes we want to read
+      // A frame can carry more than one TLS record and the record overhead depends on the
+      // negotiated version and cipher, so read until OpenSSL has nothing left instead of
+      // deriving the plain size from the frame size.
+      while (true) {
+        output.resize(beginOffset + totalReadSize + cReadChunkSize);
+        const auto &currentBuffer = common::DataBuffer(output, beginOffset + totalReadSize);
+        const auto readSize = sslWrapper_->sslRead(ssl_, currentBuffer.data, currentBuffer.size);
 
-      // We try to be a bit more explicit here, using the frame length from the frame itself rather than just blindly reading from the SSL buffer.
-
-      while (readBytes > 0) {
-        const auto &currentBuffer = common::DataBuffer(output, totalReadSize + beginOffset);
-        auto readSize = sslWrapper_->sslRead(ssl_, currentBuffer.data, currentBuffer.size);
-
-        if (readSize <= 0) {
-          const auto nativeError = sslWrapper_->getError(ssl_, readSize);
-          const std::string info = "decrypt sslRead<=0"
-                                   " frameLength=" + std::to_string(frameLength) +
-                                   " payloadLength=" + std::to_string(length) +
-                                   " availableBytes=" + std::to_string(availableBytes) +
-                                   " totalReadSize=" + std::to_string(totalReadSize) +
-                                   " requestedReadBytes=" + std::to_string(readBytes) +
-                                   " returnCode=" + std::to_string(readSize);
-          throw error::Error(error::ErrorCode::SSL_READ, nativeError, info);
+        if (readSize > 0) {
+          totalReadSize += readSize;
+          continue;
         }
 
-        totalReadSize += readSize;
-        availableBytes = sslWrapper_->getAvailableBytes(ssl_);
-        readBytes = (length - totalReadSize) > 2048 ? 2048 : length - totalReadSize;
-        output.resize(output.size() + readBytes);
+        output.resize(beginOffset + totalReadSize);
+        const auto nativeError = sslWrapper_->getError(ssl_, readSize);
+        if (nativeError != SSL_ERROR_WANT_READ) {
+          throw error::Error(error::ErrorCode::SSL_READ, nativeError,
+                             "decrypt sslRead<=0 frameLength=" + std::to_string(frameLength) +
+                             " totalReadSize=" + std::to_string(totalReadSize) +
+                             " returnCode=" + std::to_string(readSize));
+        }
+        break;
+      }
+
+      // The sender ends every frame on a record boundary. Bytes of an unfinished record mean
+      // the frame was cut, and the next frame header would be read as TLS data.
+      if (sslWrapper_->hasPending(ssl_)) {
+        output.resize(beginOffset);
+        throw error::Error(error::ErrorCode::MESSENGER_FRAME_TOO_SHORT, 0,
+                           "frame ends inside a TLS record, frameLength=" + std::to_string(frameLength));
       }
 
       return totalReadSize;
