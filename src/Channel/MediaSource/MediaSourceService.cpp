@@ -103,7 +103,7 @@ namespace aasdk::channel::mediasource {
                                                       messenger::MessageType::SPECIFIC));
 
     message->insertPayload(messenger::MessageId(
-        aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_MICROPHONE_REQUEST).getData());
+        aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_MICROPHONE_RESPONSE).getData());
     message->insertPayload(response);
 
     this->send(std::move(message), std::move(promise));
