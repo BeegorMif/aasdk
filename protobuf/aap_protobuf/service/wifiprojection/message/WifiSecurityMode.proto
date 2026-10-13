@@ -4,15 +4,21 @@ option optimize_for=SPEED;
 
 package aap_protobuf.service.wifiprojection.message;
 
+// Bit combinations as Android Auto expects them (average-web-dev/aasdk#4). The earlier sequential
+// values (WPA2_PERSONAL = 5, ...) made the phone fail to join the head unit's network.
+// Same values in Open Headunit (wireless.proto), aa-proxy-rs and WirelessAndroidAutoDongle
+// (WifiInfoResponse.proto).
 enum WifiSecurityMode {
   UNKNOWN_SECURITY_MODE = 0;
   OPEN = 1;
   WEP_64 = 2;
   WEP_128 = 3;
   WPA_PERSONAL = 4;
-  WPA2_PERSONAL = 5;
-  WPA_WPA2_PERSONAL = 6;
-  WPA_ENTERPRISE = 7;
-  WPA2_ENTERPRISE = 8;
-  WPA_WPA2_ENTERPRISE = 9;
+  WPA2_PERSONAL = 8;
+  WPA_WPA2_PERSONAL = 12;
+  WPA_ENTERPRISE = 20;
+  WPA2_ENTERPRISE = 24;
+  WPA_WPA2_ENTERPRISE = 28;
+  WPA3_PERSONAL = 32;
+  WPA2_WPA3_PERSONAL = 40;
 }
