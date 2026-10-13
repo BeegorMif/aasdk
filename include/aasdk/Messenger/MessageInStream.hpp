@@ -52,7 +52,8 @@ namespace aasdk {
 
       void receiveFramePayloadHandler(const common::DataConstBuffer &buffer);
 
-      // Drops the message being received and rejects the receive promise.
+      // Rejects the receive promise and every later one: after an error the position of the next frame
+      // header is unknown.
       void rejectMessage(const error::Error &e);
 
       size_t bufferedSize() const;
@@ -72,6 +73,8 @@ namespace aasdk {
 
       int frameSize_;
       bool isValidFrame_;
+      bool isBroken_;
+      error::Error brokenError_;
     };
 
   }

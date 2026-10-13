@@ -51,7 +51,7 @@ namespace aasdk {
 
       void inStreamMessageHandler(Message::Pointer message);
 
-      void outStreamMessageHandler(ChannelSendQueue::iterator queueElement);
+      void outStreamMessageHandler(SendPromise::Pointer promise);
 
       void rejectReceivePromiseQueue(const error::Error &e);
 

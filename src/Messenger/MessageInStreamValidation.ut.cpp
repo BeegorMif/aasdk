@@ -262,6 +262,65 @@ TEST_F(MessageInStreamValidationUnitTest, Messenger_TwoReceivesOnTheSameChannel)
     EXPECT_EQ(second.message->getPayload()[1], 0x02);
 }
 
+TEST_F(MessageInStreamValidationUnitTest, MessageInStream_RejectLastFrameBelowTotalSize)
+{
+    auto inStream = std::make_shared<MessageInStream>(ioService_, transport_, cryptor_);
+    ReceiveResult result;
+    inStream->startReceive(promise(result));
+    run();
+
+    // the FIRST frame announced 3000 bytes, the message ends after 2000 (#12)
+    sendFrame(FrameType::FIRST, common::Data(1000, 0x01), 3000);
+    sendFrame(FrameType::LAST, common::Data(1000, 0x03));
+
+    EXPECT_FALSE(result.resolved);
+    ASSERT_TRUE(result.rejected);
+    EXPECT_EQ(result.error.getCode(), error::ErrorCode::MESSENGER_MESSAGE_TOO_SHORT);
+}
+
+TEST_F(MessageInStreamValidationUnitTest, MessageInStream_NoReadAfterRejectedFrame)
+{
+    auto inStream = std::make_shared<MessageInStream>(ioService_, transport_, cryptor_);
+    ReceiveResult first;
+    inStream->startReceive(promise(first));
+    run();
+
+    // rejected before its payload was read: the payload is still in the transport
+    sendFrame(FrameType::FIRST, common::Data(100, 0x01), 0xFFFFFFFFu);
+    ASSERT_TRUE(first.rejected);
+    ASSERT_EQ(pending_, nullptr);
+
+    // the next receive would read that payload as a frame header (#12)
+    ReceiveResult second;
+    inStream->startReceive(promise(second));
+    run();
+
+    EXPECT_EQ(pending_, nullptr) << "the stream was read after a rejected frame";
+    ASSERT_TRUE(second.rejected);
+    EXPECT_EQ(second.error.getCode(), error::ErrorCode::MESSENGER_MESSAGE_TOO_LARGE);
+}
+
+TEST_F(MessageInStreamValidationUnitTest, MessageInStream_NoReadAfterIntertwinedFrame)
+{
+    auto inStream = std::make_shared<MessageInStream>(ioService_, transport_, cryptor_);
+    ReceiveResult first;
+    inStream->startReceive(promise(first));
+    run();
+
+    // a LAST frame without FIRST is rejected after its header only
+    feed(FrameHeader(ChannelId::CONTROL, FrameType::LAST, EncryptionType::PLAIN, MessageType::SPECIFIC).getData());
+    ASSERT_TRUE(first.rejected);
+    EXPECT_EQ(first.error.getCode(), error::ErrorCode::MESSENGER_INTERTWINED_CHANNELS);
+
+    ReceiveResult second;
+    inStream->startReceive(promise(second));
+    run();
+
+    EXPECT_EQ(pending_, nullptr) << "the stream was read after a rejected frame";
+    ASSERT_TRUE(second.rejected);
+    EXPECT_EQ(second.error.getCode(), error::ErrorCode::MESSENGER_INTERTWINED_CHANNELS);
+}
+
 TEST(MessageIdValidationUnitTest, MessageId_ShortPayload)
 {
     EXPECT_THROW(MessageId(common::Data()), error::Error);

@@ -26,14 +26,17 @@ namespace aasdk::messenger {
 
   MessageInStream::MessageInStream(boost::asio::io_service &ioService, transport::ITransport::Pointer transport,
                                    ICryptor::Pointer cryptor)
-      : strand_(ioService), transport_(std::move(transport)), cryptor_(std::move(cryptor)) {
+      : strand_(ioService), transport_(std::move(transport)), cryptor_(std::move(cryptor)), isBroken_(false) {
 
   }
 
   void MessageInStream::startReceive(ReceivePromise::Pointer promise) {
     AASDK_LOG_MESSENGER(debug, "startReceiveCalled()");
     strand_.dispatch([this, self = this->shared_from_this(), promise = std::move(promise)]() mutable {
-      if (promise_ == nullptr) {
+      if (isBroken_) {
+        // the position of the next frame header is unknown, nothing after the error can be read (#12)
+        promise->reject(brokenError_);
+      } else if (promise_ == nullptr) {
         promise_ = std::move(promise);
         auto transportPromise = transport::ITransport::ReceivePromise::defer(strand_);
         transportPromise->then(
@@ -42,8 +45,7 @@ namespace aasdk::messenger {
             },
             [this, self = this->shared_from_this()](const error::Error &e) mutable {
               AASDK_LOG_MESSENGER(debug, "Rejecting message.");
-              promise_->reject(e);
-              promise_.reset();
+              this->rejectMessage(e);
             });
 
         transport_->receive(FrameHeader::getSizeOf(), std::move(transportPromise));
@@ -84,9 +86,8 @@ namespace aasdk::messenger {
       // No Message Found in Buffers and this is a middle or last frame, this an error.
       if (frameHeader.getType() == FrameType::MIDDLE || frameHeader.getType() == FrameType::LAST) {
         AASDK_LOG_MESSENGER(debug, "Rejecting intertwined channel frame.");
-        promise_->reject(error::Error(error::ErrorCode::MESSENGER_INTERTWINED_CHANNELS));
-        promise_.reset();
         message_.reset();
+        this->rejectMessage(error::Error(error::ErrorCode::MESSENGER_INTERTWINED_CHANNELS));
         return;
       }
 
@@ -105,9 +106,7 @@ namespace aasdk::messenger {
         },
         [this, self = this->shared_from_this()](const error::Error &e) mutable {
           AASDK_LOG_MESSENGER(debug, "Rejecting message.");
-          message_.reset();
-          promise_->reject(e);
-          promise_.reset();
+          this->rejectMessage(e);
         });
 
     transport_->receive(frameSize, std::move(transportPromise));
@@ -132,9 +131,7 @@ namespace aasdk::messenger {
         },
         [this, self = this->shared_from_this()](const error::Error &e) mutable {
           AASDK_LOG_MESSENGER(debug, "Rejecting message.");
-          message_.reset();
-          promise_->reject(e);
-          promise_.reset();
+          this->rejectMessage(e);
         });
 
     frameSize_ = (int) frameSize.getFrameSize();
@@ -148,9 +145,7 @@ namespace aasdk::messenger {
       }
       catch (const error::Error &e) {
         AASDK_LOG_MESSENGER(debug, "Rejecting message.");
-        message_.reset();
-        promise_->reject(e);
-        promise_.reset();
+        this->rejectMessage(e);
         return;
       }
     } else {
@@ -177,6 +172,13 @@ namespace aasdk::messenger {
 
     // If this is the LAST frame or a BULK frame...
     if ((thisFrameType_ == FrameType::BULK || thisFrameType_ == FrameType::LAST) && isValidFrame_) {
+      if (thisFrameType_ == FrameType::LAST && payloadSize != announcedSize_[channelId]) {
+        // the LAST frame must complete exactly the size the FIRST frame announced (#12)
+        AASDK_LOG(error) << "[MessageInStream] Rejecting message on channel " << channelIdToString(channelId)
+                         << ": " << payloadSize << " bytes received, announced " << announcedSize_[channelId];
+        this->rejectMessage(error::Error(error::ErrorCode::MESSENGER_MESSAGE_TOO_SHORT));
+        return;
+      }
       announcedSize_.erase(channelId);
       // Every message starts with its 2 byte id, the channels read it unchecked
       if (payloadSize < sizeof(uint16_t)) {
@@ -203,10 +205,8 @@ namespace aasdk::messenger {
             this->receiveFrameHeaderHandler(common::DataConstBuffer(data));
           },
           [this, self = this->shared_from_this()](const error::Error &e) mutable {
-            message_.reset();
             AASDK_LOG_MESSENGER(debug, "Rejecting message.");
-            promise_->reject(e);
-            promise_.reset();
+            this->rejectMessage(e);
           });
 
       transport_->receive(FrameHeader::getSizeOf(), std::move(transportPromise));
@@ -214,11 +214,12 @@ namespace aasdk::messenger {
   }
 
   void MessageInStream::rejectMessage(const error::Error &e) {
-    if (message_ != nullptr) {
-      announcedSize_.erase(message_->getChannelId());
-      messageBuffer_.erase(message_->getChannelId());
-      message_.reset();
-    }
+    // A rejected frame may not have been read to its end, so the stream cannot be read any further (#12)
+    isBroken_ = true;
+    brokenError_ = e;
+    announcedSize_.clear();
+    messageBuffer_.clear();
+    message_.reset();
     promise_->reject(e);
     promise_.reset();
   }
