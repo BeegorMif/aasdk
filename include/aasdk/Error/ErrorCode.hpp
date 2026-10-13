@@ -63,7 +63,9 @@ namespace aasdk {
       // message without the 2 byte message id
       MESSENGER_MESSAGE_TOO_SHORT = 35,
       // encrypted frame that ends inside a TLS record
-      MESSENGER_FRAME_TOO_SHORT = 36
+      MESSENGER_FRAME_TOO_SHORT = 36,
+      // the phone reports that it could not read our framing (MESSAGE_FRAMING_ERROR)
+      MESSENGER_PEER_FRAMING_ERROR = 37
     };
 
   }

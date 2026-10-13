@@ -71,6 +71,20 @@ namespace aasdk::channel::control {
     sendPingResponse(const aap_protobuf::service::control::message::PingResponse &response,
                      SendPromise::Pointer promise) override;
 
+    void sendServiceDiscoveryUpdate(const aap_protobuf::service::control::message::ServiceDiscoveryUpdate &update, SendPromise::Pointer promise) override;
+
+    void sendCallAvailabilityStatus(const aap_protobuf::service::control::message::CallAvailabilityStatus &status, SendPromise::Pointer promise) override;
+
+    void sendCarConnectedDevicesRequest(const aap_protobuf::service::control::message::CarConnectedDevicesRequest &request, SendPromise::Pointer promise) override;
+
+    void sendCarConnectedDevices(const aap_protobuf::service::control::message::CarConnectedDevices &devices, SendPromise::Pointer promise) override;
+
+    void sendUserSwitchRequest(const aap_protobuf::service::control::message::UserSwitchRequest &request, SendPromise::Pointer promise) override;
+
+    void sendUserSwitchResponse(const aap_protobuf::service::control::message::UserSwitchResponse &response, SendPromise::Pointer promise) override;
+
+    void sendChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &notification, SendPromise::Pointer promise) override;
+
   private:
     using std::enable_shared_from_this<ControlServiceChannel>::shared_from_this;
 
@@ -108,6 +122,16 @@ namespace aasdk::channel::control {
 
     void handleBatteryStatusNotification(const common::DataConstBuffer &payload,
                                                            IControlServiceChannelEventHandler::Pointer eventHandler);
+
+    // Parses a notification of protocol 1.6+, passes it to the event handler and keeps receiving (#7)
+    template<typename Proto>
+    void handleNotification(const common::DataConstBuffer &payload, IControlServiceChannelEventHandler::Pointer eventHandler,
+                            void (IControlServiceChannelEventHandler::*callback)(const Proto &), const char *name);
+
+    void sendControlMessage(uint16_t messageId, const google::protobuf::Message &payload, SendPromise::Pointer promise);
+
+    // only the first version response counts (#5): a phone answers every version request it got
+    bool versionResponseReceived_ = false;
   };
 
 }
