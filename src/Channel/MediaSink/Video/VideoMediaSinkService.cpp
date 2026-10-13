@@ -98,6 +98,17 @@ namespace aasdk::channel::mediasink::video {
 
     this->send(std::move(message), std::move(promise));
   }
+  void VideoMediaSinkService::sendUpdateUiConfigRequest(
+      const aap_protobuf::service::control::message::UpdateUiConfigRequest &request, SendPromise::Pointer promise) {
+    AASDK_LOG_CHANNEL_MEDIA_SINK(debug, "sendUpdateUiConfigRequest()");
+    auto message(std::make_shared<messenger::Message>(channelId_, messenger::EncryptionType::ENCRYPTED,
+                                                      messenger::MessageType::SPECIFIC));
+    message->insertPayload(
+        messenger::MessageId(aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_UPDATE_UI_CONFIG_REQUEST).getData());
+    message->insertPayload(request);
+    this->send(std::move(message), std::move(promise));
+  }
+
 
   void VideoMediaSinkService::messageHandler(messenger::Message::Pointer message,
                                              IVideoMediaSinkServiceEventHandler::Pointer eventHandler) {
@@ -127,6 +138,24 @@ namespace aasdk::channel::mediasink::video {
       case aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
         this->handleVideoFocusRequest(payload, std::move(eventHandler));
         break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
+      case aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_UPDATE_UI_CONFIG_REPLY: {
+        aap_protobuf::service::control::message::UpdateUiConfigReply reply;
+        if (reply.ParseFromArray(payload.cdata, payload.size)) {
+          eventHandler->onUpdateUiConfigReply(reply);
+        } else {
+          AASDK_LOG(warning) << "[VideoMediaSinkService] update UI config reply not readable";
+        }
+        this->receive(std::move(eventHandler));
+        break;
+      }
       default:
         AASDK_LOG(error) << "[VideoMediaSinkService] Message Id not Handled: " << messageId.getId();
         this->receive(std::move(eventHandler));

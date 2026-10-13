@@ -30,6 +30,9 @@ namespace aasdk::channel::sensorsource {
 
     void receive(ISensorSourceServiceEventHandler::Pointer eventHandler) override;
 
+    void sendSensorError(const aap_protobuf::service::sensorsource::message::SensorError &error,
+                         SendPromise::Pointer promise) override;
+
     void
     sendChannelOpenResponse(const aap_protobuf::service::control::message::ChannelOpenResponse &response,
                             SendPromise::Pointer promise) override;

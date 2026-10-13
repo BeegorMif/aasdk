@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/control/message/UpdateUiConfigRequest.pb.h>
 #include <memory>
 #include "IVideoMediaSinkServiceEventHandler.hpp"
 #include "aasdk/Channel/Promise.hpp"
@@ -59,6 +60,10 @@ namespace aasdk::channel::mediasink::video {
     sendVideoFocusIndication(
         const aap_protobuf::service::media::video::message::VideoFocusNotification &indication,
         SendPromise::Pointer promise) = 0;
+
+    // margins, insets and theme during a running session (#10)
+    virtual void sendUpdateUiConfigRequest(const aap_protobuf::service::control::message::UpdateUiConfigRequest &request,
+                                           SendPromise::Pointer promise) = 0;
 
   };
 

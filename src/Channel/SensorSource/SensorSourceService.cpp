@@ -51,6 +51,17 @@ namespace aasdk::channel::sensorsource {
 
     this->send(std::move(message), std::move(promise));
   }
+  void SensorSourceService::sendSensorError(const aap_protobuf::service::sensorsource::message::SensorError &error,
+                                            SendPromise::Pointer promise) {
+    AASDK_LOG_CHANNEL_SENSOR_SOURCE(debug, "sendSensorError()");
+    auto message(std::make_shared<messenger::Message>(channelId_, messenger::EncryptionType::ENCRYPTED,
+                                                      messenger::MessageType::SPECIFIC));
+    message->insertPayload(
+        messenger::MessageId(aap_protobuf::service::sensorsource::SensorMessageId::SENSOR_MESSAGE_ERROR).getData());
+    message->insertPayload(error);
+    this->send(std::move(message), std::move(promise));
+  }
+
 
   void
   SensorSourceService::messageHandler(messenger::Message::Pointer message, ISensorSourceServiceEventHandler::Pointer eventHandler) {
@@ -67,6 +78,14 @@ namespace aasdk::channel::sensorsource {
       case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_OPEN_REQUEST:
         this->handleChannelOpenRequest(payload, std::move(eventHandler));
         break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
       default:
         AASDK_LOG(error) << "[SensorSourceService] Message Id not Handled: " << messageId.getId();
         this->receive(std::move(eventHandler));

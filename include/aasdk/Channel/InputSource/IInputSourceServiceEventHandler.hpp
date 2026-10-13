@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <aap_protobuf/service/inputsource/message/InputFeedback.pb.h>
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <stdint.h>
 #include <aap_protobuf/service/control/message/ChannelOpenRequest.pb.h>
 #include <aap_protobuf/service/media/sink/message/KeyBindingRequest.pb.h>
@@ -36,6 +38,18 @@ namespace aasdk::channel::inputsource {
     virtual void onKeyBindingRequest(const aap_protobuf::service::media::sink::message::KeyBindingRequest &request) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+
+    // The phone closes this channel (protocol 1.6+, #7). The default does nothing; the service keeps
+
+    // receiving by itself, do not call receive() in an override.
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
+
+
+    // Feedback for an input (e.g. haptic, #10). Default: nothing, the service keeps receiving by itself.
+
+    virtual void onInputFeedback(const aap_protobuf::service::inputsource::message::InputFeedback &) {}
   };
 
 }

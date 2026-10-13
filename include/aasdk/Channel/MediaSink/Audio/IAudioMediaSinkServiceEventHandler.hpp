@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <stdint.h>
 #include <aap_protobuf/service/media/shared/message/Config.pb.h>
 #include <aap_protobuf/service/media/shared/message/Setup.pb.h>
@@ -52,6 +53,13 @@ namespace aasdk::channel::mediasink::audio {
     virtual void onMediaIndication(const common::DataConstBuffer &buffer) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+
+    // The phone closes this channel (protocol 1.6+, #7). The default does nothing; the service keeps
+
+    // receiving by itself, do not call receive() in an override.
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
 
   };
 

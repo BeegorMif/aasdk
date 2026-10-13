@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/media/sink/message/AudioUnderflowNotification.pb.h>
 #include <memory>
 #include "IAudioMediaSinkServiceEventHandler.hpp"
 #include "aasdk/Channel/Promise.hpp"
@@ -54,6 +55,10 @@ namespace aasdk::channel::mediasink::audio {
     sendMediaAckIndication(
         const aap_protobuf::service::media::source::message::Ack &indication,
         SendPromise::Pointer promise) = 0;
+
+    // the head unit ran out of audio data (#10)
+    virtual void sendAudioUnderflowNotification(const aap_protobuf::service::media::sink::message::AudioUnderflowNotification &notification,
+                                                SendPromise::Pointer promise) = 0;
 
   };
 
