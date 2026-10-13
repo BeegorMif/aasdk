@@ -26,4 +26,7 @@ enum SensorType
     SENSOR_GYROSCOPE_DATA = 20;
     SENSOR_GPS_SATELLITE_DATA = 21;
     SENSOR_TOLL_CARD = 22;
+    // battery and consumption model for EV routing; payload only partly known (aa-proxy-rs ev.proto, #11)
+    SENSOR_VEHICLE_ENERGY_MODEL_DATA = 23;
+    SENSOR_TRAILER_DATA = 24;
 }

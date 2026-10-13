@@ -12,4 +12,6 @@ enum NavigationStatusMessageId
   INSTRUMENT_CLUSTER_NAVIGATION_DISTANCE_EVENT = 32773 [deprecated = true];
   INSTRUMENT_CLUSTER_NAVIGATION_STATE = 32774;
   INSTRUMENT_CLUSTER_NAVIGATION_CURRENT_POSITION = 32775;
+  // phone -> head unit, sent when the head unit announces a newer protocol version (aa-proxy-rs, #11)
+  INSTRUMENT_CLUSTER_VEHICLE_ENERGY_FORECAST = 32776;
 }

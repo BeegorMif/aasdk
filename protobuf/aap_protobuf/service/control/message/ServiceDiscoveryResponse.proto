@@ -20,6 +20,8 @@ message ServiceDiscoveryResponse
     optional string head_unit_software_build = 9 [deprecated = true];
     optional string head_unit_software_version = 10 [deprecated = true];
     optional bool can_play_native_media_during_vr = 11 [deprecated = true];
+    // older way to hide the clock, session_configuration UI_CONFIG_HIDE_CLOCK replaces it (#11)
+    optional bool hide_projected_clock = 12;
     optional int32 session_configuration = 13;
     optional string display_name = 14;
     optional bool probe_for_support = 15;
