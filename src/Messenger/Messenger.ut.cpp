@@ -145,6 +145,55 @@ TEST_F(MessengerUnitTest, Messenger_OnlyOneReceiveAtATime)
     ioService_.run();
 }
 
+TEST_F(MessengerUnitTest, Messenger_StopRejectsPendingPromises)
+{
+    Messenger::Pointer themessenger(std::make_shared<Messenger>(ioService_, messageInStream_, messageOutStream_));
+
+    ReceivePromise::Pointer inStreamReceivePromise;
+    EXPECT_CALL(messageInStreamMock_, startReceive(_)).WillOnce(SaveArg<0>(&inStreamReceivePromise));
+    themessenger->enqueueReceive(ChannelId::MEDIA_SINK_MEDIA_AUDIO, std::move(receivePromise_));
+
+    Message::Pointer message(std::make_shared<Message>(ChannelId::MEDIA_SINK_MEDIA_AUDIO, EncryptionType::ENCRYPTED, MessageType::SPECIFIC));
+    SendPromise::Pointer outStreamSendPromise;
+    EXPECT_CALL(messageOutStreamMock_, stream(message, _)).WillOnce(SaveArg<1>(&outStreamSendPromise));
+    themessenger->enqueueSend(message, std::move(sendPromise_));
+
+    ioService_.run();
+    ioService_.reset();
+
+    // both end with OPERATION_ABORTED when the messenger stops (#13, upstream opencardev/aasdk#67)
+    const error::Error aborted(error::ErrorCode::OPERATION_ABORTED);
+    EXPECT_CALL(receivePromiseHandlerMock_, onReject(aborted));
+    EXPECT_CALL(receivePromiseHandlerMock_, onResolve(_)).Times(0);
+    EXPECT_CALL(sendPromiseHandlerMock_, onReject(aborted));
+    EXPECT_CALL(sendPromiseHandlerMock_, onResolve()).Times(0);
+
+    themessenger->stop();
+    ioService_.run();
+}
+
+TEST_F(MessengerUnitTest, Messenger_SendCompletingAfterStop)
+{
+    Messenger::Pointer themessenger(std::make_shared<Messenger>(ioService_, messageInStream_, messageOutStream_));
+
+    Message::Pointer message(std::make_shared<Message>(ChannelId::MEDIA_SINK_MEDIA_AUDIO, EncryptionType::ENCRYPTED, MessageType::SPECIFIC));
+    SendPromise::Pointer outStreamSendPromise;
+    EXPECT_CALL(messageOutStreamMock_, stream(message, _)).WillOnce(SaveArg<1>(&outStreamSendPromise));
+    themessenger->enqueueSend(message, std::move(sendPromise_));
+    ioService_.run();
+    ioService_.reset();
+
+    EXPECT_CALL(sendPromiseHandlerMock_, onReject(error::Error(error::ErrorCode::OPERATION_ABORTED)));
+    EXPECT_CALL(sendPromiseHandlerMock_, onResolve()).Times(0);
+    themessenger->stop();
+    ioService_.run();
+    ioService_.reset();
+
+    // the stream finishes the message stop() already removed from the queue
+    outStreamSendPromise->resolve();
+    ioService_.run();
+}
+
 TEST_F(MessengerUnitTest, Messenger_Send)
 {
     Messenger::Pointer themessenger(std::make_shared<Messenger>(ioService_, messageInStream_, messageOutStream_));

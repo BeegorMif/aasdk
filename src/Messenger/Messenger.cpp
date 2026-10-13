@@ -94,16 +94,21 @@ namespace aasdk::messenger {
   void Messenger::doSend() {
     auto queueElementIter = channelSendPromiseQueue_.begin();
     auto outStreamPromise = SendPromise::defer(sendStrand_);
-    outStreamPromise->then(std::bind(&Messenger::outStreamMessageHandler, this->shared_from_this(), queueElementIter),
+    outStreamPromise->then(std::bind(&Messenger::outStreamMessageHandler, this->shared_from_this(),
+                                     queueElementIter->second),
                            std::bind(&Messenger::rejectSendPromiseQueue, this->shared_from_this(),
                                      std::placeholders::_1));
 
     messageOutStream_->stream(std::move(queueElementIter->first), std::move(outStreamPromise));
   }
 
-  void Messenger::outStreamMessageHandler(ChannelSendQueue::iterator queueElement) {
-    queueElement->second->resolve();
-    channelSendPromiseQueue_.erase(queueElement);
+  void Messenger::outStreamMessageHandler(SendPromise::Pointer promise) {
+    // stop() may have rejected and removed the message while it was being sent
+    if (channelSendPromiseQueue_.empty() || channelSendPromiseQueue_.front().second != promise) {
+      return;
+    }
+    promise->resolve();
+    channelSendPromiseQueue_.pop_front();
 
     if (!channelSendPromiseQueue_.empty()) {
       this->doSend();
@@ -126,8 +131,15 @@ namespace aasdk::messenger {
   }
 
   void Messenger::stop() {
+    // Pending receives and sends end with OPERATION_ABORTED, so no handler is called later with
+    // a transport error for a session that is already shut down (#13, upstream opencardev/aasdk#67)
     receiveStrand_.dispatch([this, self = this->shared_from_this()]() {
       channelReceiveMessageQueue_.clear();
+      this->rejectReceivePromiseQueue(error::Error(error::ErrorCode::OPERATION_ABORTED));
+    });
+
+    sendStrand_.dispatch([this, self = this->shared_from_this()]() {
+      this->rejectSendPromiseQueue(error::Error(error::ErrorCode::OPERATION_ABORTED));
     });
   }
 
