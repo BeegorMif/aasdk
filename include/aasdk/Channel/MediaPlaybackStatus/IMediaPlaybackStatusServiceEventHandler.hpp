@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <aap_protobuf/service/control/message/ChannelOpenRequest.pb.h>
 #include <aap_protobuf/service/mediaplayback/message/MediaPlaybackMetadata.pb.h>
 #include <aap_protobuf/service/mediaplayback/message/MediaPlaybackStatus.pb.h>
@@ -36,6 +37,13 @@ namespace aasdk::channel::mediaplaybackstatus {
     virtual void onChannelOpenRequest(const aap_protobuf::service::control::message::ChannelOpenRequest &request) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+
+    // The phone closes this channel (protocol 1.6+, #7). The default does nothing; the service keeps
+
+    // receiving by itself, do not call receive() in an override.
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
 
     virtual void
     onMetadataUpdate(const aap_protobuf::service::mediaplayback::message::MediaPlaybackMetadata &metadata) = 0;

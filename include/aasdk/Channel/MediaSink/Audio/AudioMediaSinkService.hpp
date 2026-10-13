@@ -33,6 +33,9 @@ namespace aasdk::channel::mediasink::audio {
 
     void receive(IAudioMediaSinkServiceEventHandler::Pointer eventHandler) override;
 
+    void sendAudioUnderflowNotification(const aap_protobuf::service::media::sink::message::AudioUnderflowNotification &notification,
+                                        SendPromise::Pointer promise) override;
+
     void
     sendChannelOpenResponse(const aap_protobuf::service::control::message::ChannelOpenResponse &response,
                             SendPromise::Pointer promise) override;

@@ -69,12 +69,25 @@ namespace aasdk::channel::mediabrowser {
     switch (messageId.getId()) {
       case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_OPEN_REQUEST:
         this->handleChannelOpenRequest(payload, std::move(eventHandler));
+      break;
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_ROOT_NODE:
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_SOURCE_NODE:
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_LIST_NODE:
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_SONG_NODE:
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_GET_NODE:
       case aap_protobuf::service::mediabrowser::MediaBrowserMessageId::MEDIA_BROWSE_INPUT:
+        // not implemented yet: keep receiving
+        AASDK_LOG(info) << "[MediaBrowserService] Message Id not implemented: " << messageId.getId();
+        this->receive(std::move(eventHandler));
+        break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
       default:
         AASDK_LOG(error) << "[MediaBrowserService] Message Id not Handled: " << messageId.getId();
         this->receive(std::move(eventHandler));

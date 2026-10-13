@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <aap_protobuf/service/bluetooth/message/BluetoothPairingRequest.pb.h>
 #include <aap_protobuf/service/bluetooth/message/BluetoothAuthenticationData.pb.h>
 #include <aap_protobuf/service/bluetooth/message/BluetoothAuthenticationResult.pb.h>
@@ -42,6 +43,13 @@ namespace aasdk::channel::bluetooth {
     onBluetoothAuthenticationResult(const aap_protobuf::service::bluetooth::message::BluetoothAuthenticationResult &request) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+
+    // The phone closes this channel (protocol 1.6+, #7). The default does nothing; the service keeps
+
+    // receiving by itself, do not call receive() in an override.
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
   };
 
 }

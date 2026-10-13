@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <aap_protobuf/service/control/message/UpdateUiConfigReply.pb.h>
+#include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <stdint.h>
 #include <aap_protobuf/service/media/shared/message/Setup.pb.h>
 #include <aap_protobuf/service/media/shared/message/Start.pb.h>
@@ -55,6 +57,18 @@ namespace aasdk::channel::mediasink::video {
         const aap_protobuf::service::media::video::message::VideoFocusRequestNotification &request) = 0;
 
     virtual void onChannelError(const error::Error &e) = 0;
+
+
+    // The phone closes this channel (protocol 1.6+, #7). The default does nothing; the service keeps
+
+    // receiving by itself, do not call receive() in an override.
+
+    virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
+
+
+    // Answer to sendUpdateUiConfigRequest (#10). Default: nothing, the service keeps receiving by itself.
+
+    virtual void onUpdateUiConfigReply(const aap_protobuf::service::control::message::UpdateUiConfigReply &) {}
   };
 
 }

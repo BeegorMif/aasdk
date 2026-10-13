@@ -78,6 +78,22 @@ namespace aasdk::channel::mediaplaybackstatus {
         this->handlePlaybackUpdate(payload, std::move(eventHandler));
         break;
 
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+
+        notification.ParseFromArray(payload.cdata, payload.size);
+
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+
+        eventHandler->onChannelCloseNotification(notification);
+
+        this->receive(std::move(eventHandler));
+
+        break;
+
+      }
+
       default:
         AASDK_LOG(error) << "[MediaPlaybackStatusService] Message Id not Handled: " << messageId.getId() << " : "
                          << dump(payload);

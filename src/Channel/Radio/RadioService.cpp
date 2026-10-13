@@ -95,6 +95,18 @@ namespace aasdk::channel::radio {
       case aap_protobuf::service::radio::RadioMessageId::RADIO_MESSAGE_RADIO_SOURCE_REQUEST:
       case aap_protobuf::service::radio::RadioMessageId::RADIO_MESSAGE_RADIO_SOURCE_RESPONSE:
       case aap_protobuf::service::radio::RadioMessageId::RADIO_MESSAGE_STATE_NOTIFICATION:
+        // not implemented yet: keep receiving
+        AASDK_LOG(info) << "[RadioService] Message Id not implemented: " << messageId.getId();
+        this->receive(std::move(eventHandler));
+        break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
       default:
         AASDK_LOG(error) << "[RadioService] Message Id not Handled: " << messageId.getId();
         this->receive(std::move(eventHandler));

@@ -34,6 +34,9 @@ namespace aasdk::channel::mediasink::video {
 
     void receive(IVideoMediaSinkServiceEventHandler::Pointer eventHandler) override;
 
+    void sendUpdateUiConfigRequest(const aap_protobuf::service::control::message::UpdateUiConfigRequest &request,
+                                   SendPromise::Pointer promise) override;
+
     void
     sendChannelOpenResponse(const aap_protobuf::service::control::message::ChannelOpenResponse &response,
                             SendPromise::Pointer promise) override;

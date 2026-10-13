@@ -86,6 +86,18 @@ namespace aasdk::channel::mediasink::audio {
 
     this->send(std::move(message), std::move(promise));
   }
+  void AudioMediaSinkService::sendAudioUnderflowNotification(
+      const aap_protobuf::service::media::sink::message::AudioUnderflowNotification &notification,
+      SendPromise::Pointer promise) {
+    AASDK_LOG_CHANNEL_MEDIA_SINK(debug, "sendAudioUnderflowNotification()");
+    auto message(std::make_shared<messenger::Message>(channelId_, messenger::EncryptionType::ENCRYPTED,
+                                                      messenger::MessageType::SPECIFIC));
+    message->insertPayload(
+        messenger::MessageId(aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_AUDIO_UNDERFLOW_NOTIFICATION).getData());
+    message->insertPayload(notification);
+    this->send(std::move(message), std::move(promise));
+  }
+
 
   void AudioMediaSinkService::messageHandler(messenger::Message::Pointer message,
                                              IAudioMediaSinkServiceEventHandler::Pointer eventHandler) {
@@ -114,6 +126,14 @@ namespace aasdk::channel::mediasink::audio {
       case aap_protobuf::service::media::sink::MediaMessageId::MEDIA_MESSAGE_DATA:
         this->handleMediaWithTimestampIndication(payload, std::move(eventHandler));
         break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
       default:
         AASDK_LOG(error) << "[AudioMediaSinkService] Message Id not Handled: " << messageId.getId();
         this->receive(std::move(eventHandler));

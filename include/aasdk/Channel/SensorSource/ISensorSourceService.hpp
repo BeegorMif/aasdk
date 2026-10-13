@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <aap_protobuf/service/sensorsource/message/SensorError.pb.h>
 #include <memory>
 #include "aasdk/Channel/Promise.hpp"
 #include "aasdk/Channel/IChannel.hpp"
@@ -48,6 +49,10 @@ namespace aasdk::channel::sensorsource {
     virtual void
     sendSensorStartResponse(const aap_protobuf::service::sensorsource::message::SensorStartResponseMessage &response,
                             SendPromise::Pointer promise) = 0;
+    // a sensor the phone asked for fails (#10)
+    virtual void sendSensorError(const aap_protobuf::service::sensorsource::message::SensorError &error,
+                                 SendPromise::Pointer promise) = 0;
+
   };
 
 }

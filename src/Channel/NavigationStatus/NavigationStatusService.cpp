@@ -91,6 +91,18 @@ namespace aasdk::channel::navigationstatus {
         AASDK_LOG_CHANNEL_NAVIGATION(debug, "instrument cluster start/stop");
         this->receive(std::move(eventHandler));
         break;
+      case aap_protobuf::service::control::message::ControlMessageType::MESSAGE_CHANNEL_CLOSE_NOTIFICATION: {
+        aap_protobuf::service::control::message::ChannelCloseNotification notification;
+        notification.ParseFromArray(payload.cdata, payload.size);
+        AASDK_LOG(info) << "[" << messenger::channelIdToString(channelId_) << "] channel close notification";
+        eventHandler->onChannelCloseNotification(notification);
+        this->receive(std::move(eventHandler));
+        break;
+      }
+      case aap_protobuf::service::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_VEHICLE_ENERGY_FORECAST:
+        eventHandler->onVehicleEnergyForecast(payload);
+        this->receive(std::move(eventHandler));
+        break;
       default:
         AASDK_LOG(error) << "[NavigationStatusService] Message Id not Handled: " << messageId.getId() << " : "
                          << dump(payload);
