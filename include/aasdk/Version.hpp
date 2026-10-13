@@ -19,5 +19,7 @@
 
 #include <stdint.h>
 
-static const uint16_t AASDK_MAJOR = 1;
-static const uint16_t AASDK_MINOR = 6;
+// Protocol version requested from the phone (AASDK_VERSION overrides it). Captures (#14): asked for 1.6 the
+// phone selected 1.7, asked for 5.1 it selected 6.1 and additionally sent the vehicle energy forecast.
+static const uint16_t AASDK_MAJOR = 5;
+static const uint16_t AASDK_MINOR = 1;
