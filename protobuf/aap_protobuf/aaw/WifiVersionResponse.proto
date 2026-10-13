@@ -1,10 +1,19 @@
 syntax="proto2";
 
+import "aap_protobuf/aaw/WppWifiDeviceInfo.proto";
+
 package aap_protobuf.aaw;
 
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
+// Phone -> head unit. status and selected_wifi_channel_type are int32: values the enums do not know yet
+// must not make the message unreadable. status holds a Status value.
 message WifiVersionResponse {
-  required uint32 unknown_value_a = 1;
-  required uint32 unknown_value_b = 2;
-  optional string unknown_value_c = 3;
-  required uint32 unknown_value_d = 4;
+  optional int32 major = 1;
+  optional int32 minor = 2;
+  optional string device_serial = 3;
+  optional int32 status = 4;
+  optional int32 selected_wifi_channel_type = 5;
+  optional WppWifiDeviceInfo device_info = 6;
+  optional bytes setup_token = 7;
 }

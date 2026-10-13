@@ -1,0 +1,18 @@
+syntax="proto2";
+
+package aap_protobuf.aaw;
+
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
+// The car as the head unit describes it in WifiVersionRequest (same fields as HeadUnitInfo)
+message WppCarInfo {
+  optional string make = 1;
+  optional string model = 2;
+  optional string model_year = 3;
+  optional string vehicle_id = 4;
+  optional string head_unit_make = 5;
+  optional string head_unit_model = 6;
+  optional string head_unit_software_build = 7;
+  optional string head_unit_software_version = 8;
+  optional int32 body_type = 9;
+}

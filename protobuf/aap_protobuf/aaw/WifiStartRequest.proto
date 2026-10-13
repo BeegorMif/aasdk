@@ -1,8 +1,13 @@
 syntax="proto2";
 
+import "aap_protobuf/aaw/StartRequestReason.proto";
+
 package aap_protobuf.aaw;
 
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
 message WifiStartRequest {
   required string ip_address = 1;
   required uint32 port = 2;
+  optional StartRequestReason start_request_reason = 3;
 }

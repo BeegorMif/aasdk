@@ -1,0 +1,12 @@
+syntax="proto2";
+
+package aap_protobuf.aaw;
+
+// Field numbers and names from Android Auto traffic as documented by Open Headunit (wireless.proto,
+// andreknieriem/open-headunit@4ee1d58) and aa-proxy-rs; written for aasdk (average-web-dev/aasdk#8).
+// TCP endpoint of the head unit for the wireless handshake. From Android Auto 17.4 the phone stores it
+// against the head unit's Bluetooth address and dials it directly on later connections (#9).
+message WifiProjectionProtocolInfo {
+  optional string ip_address = 1;
+  optional int32 port = 2;
+}
