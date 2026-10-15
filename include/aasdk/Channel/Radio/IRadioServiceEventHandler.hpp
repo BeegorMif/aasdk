@@ -19,6 +19,11 @@
 
 #include <aap_protobuf/service/control/message/ChannelCloseNotification.pb.h>
 #include <aap_protobuf/service/control/message/ChannelOpenRequest.pb.h>
+#include <aap_protobuf/service/radio/message/RadioMuteRequest.pb.h>
+#include <aap_protobuf/service/radio/message/RadioTuneRequest.pb.h>
+#include <aap_protobuf/service/radio/message/RadioFavoriteToggleRequest.pb.h>
+#include <aap_protobuf/service/radio/message/RadioTuneDirectionRequest.pb.h>
+#include <aap_protobuf/service/radio/message/RadioSearchRequest.pb.h>
 #include "aasdk/Error/Error.hpp"
 
 namespace aasdk::channel::radio {
@@ -42,6 +47,23 @@ namespace aasdk::channel::radio {
     // receiving by itself, do not call receive() in an override.
 
     virtual void onChannelCloseNotification(const aap_protobuf::service::control::message::ChannelCloseNotification &) {}
+
+    // Radio v2 requests of the phone (Android Auto 16.2+, #32). Defaults do nothing; the service keeps receiving by
+    // itself, do not call receive() in an override. Expected answers (IRadioService):
+    //   mute            -> sendMuteResponse
+    //   tune, direction -> sendTuneResponse, then sendProgramInfoNotification (the phone waits 6 seconds)
+    //   favorite toggle -> sendFavoriteListNotification (applies to the current station)
+
+    virtual void onMuteRequest(const aap_protobuf::service::radio::message::RadioMuteRequest &) {}
+
+    virtual void onTuneRequest(const aap_protobuf::service::radio::message::RadioTuneRequest &) {}
+
+    virtual void onFavoriteToggleRequest(const aap_protobuf::service::radio::message::RadioFavoriteToggleRequest &) {}
+
+    virtual void onTuneDirectionRequest(const aap_protobuf::service::radio::message::RadioTuneDirectionRequest &) {}
+
+    // custom action of the phone's radio browser, e.g. RadioBandGroup.band_scan_action
+    virtual void onSearchRequest(const aap_protobuf::service::radio::message::RadioSearchRequest &) {}
   };
 
 }

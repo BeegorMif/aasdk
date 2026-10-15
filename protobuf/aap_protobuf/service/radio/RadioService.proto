@@ -5,7 +5,14 @@ option optimize_for=SPEED;
 package aap_protobuf.service.radio;
 
 import "aap_protobuf/service/radio/message/RadioProperties.proto";
+import "aap_protobuf/service/radio/message/RadioBands.proto";
 
 message RadioService {
+    // v1: one entry per tuner (Android Auto up to 16.1)
     repeated message.RadioProperties radio_properties = 1;
+    // v2 (16.2+): band groups for the phone's radio browser. Android Auto 17.3 reads only this field.
+    // Source: open-android-auto @ 61eab61, oaa/control/RadioChannelData.proto (RadioChannelConfig), confidence
+    // silver; its channel documentation still shows it as field 1, the 17.3 trace in the audit file says 2.
+    // average-web-dev/aasdk#32
+    optional message.RadioBands bands = 2;
 }

@@ -1,0 +1,21 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.radio.message;
+
+// Radio v2 (Android Auto 16.2+). Source: open-android-auto @ 61eab61, oaa/radio/RadioMessages.proto, confidence silver (APK static
+// analysis, not verified against a phone). average-web-dev/aasdk#32
+// Type of a RadioProgramIdentifier, same numbering as Android's ProgramSelector identifier types
+enum RadioIdentifierType {
+  RADIO_IDENTIFIER_TYPE_INVALID = 0;
+  RADIO_IDENTIFIER_TYPE_AMFM_FREQUENCY = 1;
+  RADIO_IDENTIFIER_TYPE_RDS_PI = 2;
+  RADIO_IDENTIFIER_TYPE_HD_STATION_ID_EXT = 3;
+  RADIO_IDENTIFIER_TYPE_HD_STATION_NAME = 4;
+  RADIO_IDENTIFIER_TYPE_DAB_DMB_SID_EXT = 5;
+  RADIO_IDENTIFIER_TYPE_DAB_ENSEMBLE = 6;
+  RADIO_IDENTIFIER_TYPE_DAB_SCID = 7;
+  RADIO_IDENTIFIER_TYPE_DAB_FREQUENCY = 8;
+  RADIO_IDENTIFIER_TYPE_DAB_SID_EXT = 9;
+}

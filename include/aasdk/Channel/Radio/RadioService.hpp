@@ -36,6 +36,24 @@ namespace aasdk::channel::radio {
     sendChannelOpenResponse(const aap_protobuf::service::control::message::ChannelOpenResponse &response,
                             SendPromise::Pointer promise) override;
 
+    void sendProgramListNotification(
+        const aap_protobuf::service::radio::message::RadioProgramListNotification &notification,
+        SendPromise::Pointer promise) override;
+
+    void sendProgramInfoNotification(
+        const aap_protobuf::service::radio::message::RadioProgramInfoNotification &notification,
+        SendPromise::Pointer promise) override;
+
+    void sendMuteResponse(const aap_protobuf::service::radio::message::RadioMuteResponse &response,
+                          SendPromise::Pointer promise) override;
+
+    void sendTuneResponse(const aap_protobuf::service::radio::message::RadioTuneResponse &response,
+                          SendPromise::Pointer promise) override;
+
+    void sendFavoriteListNotification(
+        const aap_protobuf::service::radio::message::RadioFavoriteListNotification &notification,
+        SendPromise::Pointer promise) override;
+
 
   private:
     using std::enable_shared_from_this<RadioService>::shared_from_this;
@@ -44,6 +62,13 @@ namespace aasdk::channel::radio {
 
     void handleChannelOpenRequest(const common::DataConstBuffer &payload,
                                   IRadioServiceEventHandler::Pointer eventHandler);
+
+    void sendMessage(uint16_t messageId, const google::protobuf::Message &payload, SendPromise::Pointer promise);
+
+    // parses a v2 request and passes it to the handler; a payload that does not parse is logged and dropped
+    template<typename Request>
+    void handleRequest(const common::DataConstBuffer &payload, IRadioServiceEventHandler::Pointer eventHandler,
+                       void (IRadioServiceEventHandler::*callback)(const Request &), const char *name);
 
   };
 

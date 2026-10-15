@@ -30,4 +30,18 @@ enum RadioMessageId {
   RADIO_MESSAGE_RADIO_SOURCE_REQUEST = 32791;
   RADIO_MESSAGE_RADIO_SOURCE_RESPONSE = 32792;
   RADIO_MESSAGE_STATE_NOTIFICATION = 32793;
+
+  // Radio v2 (Android Auto 16.2+), right after v1. Source: open-android-auto @ 61eab61,
+  // oaa/radio/RadioMessages.proto ("verified 2026-03-07" against the APK's switch, not against a phone).
+  // average-web-dev/aasdk#32
+  RADIO_MESSAGE_PROGRAM_LIST_NOTIFICATION = 32794;      // 0x801A HU -> phone
+  RADIO_MESSAGE_PROGRAM_INFO_NOTIFICATION = 32795;      // 0x801B HU -> phone
+  RADIO_MESSAGE_MUTE_REQUEST = 32796;                   // 0x801C phone -> HU
+  RADIO_MESSAGE_MUTE_RESPONSE = 32797;                  // 0x801D HU -> phone
+  RADIO_MESSAGE_TUNE_REQUEST = 32798;                   // 0x801E phone -> HU
+  RADIO_MESSAGE_TUNE_RESPONSE = 32799;                  // 0x801F HU -> phone
+  RADIO_MESSAGE_FAVORITE_LIST_NOTIFICATION = 32800;     // 0x8020 HU -> phone
+  RADIO_MESSAGE_FAVORITE_TOGGLE_REQUEST = 32801;        // 0x8021 phone -> HU
+  RADIO_MESSAGE_TUNE_DIRECTION_REQUEST = 32802;         // 0x8022 phone -> HU
+  RADIO_MESSAGE_SEARCH_REQUEST = 32803;                 // 0x8023 phone -> HU
 }

@@ -15,7 +15,7 @@
 *  along with aasdk. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Fields and enum values added from other Android Auto projects (average-web-dev/aasdk#11)
+// Fields and enum values added from other Android Auto projects (average-web-dev/aasdk#11, #32)
 
 #include <gtest/gtest.h>
 #include <aap_protobuf/service/control/message/HeadUnitInfo.pb.h>
@@ -26,6 +26,8 @@
 #include <aap_protobuf/service/media/video/message/VideoFocusReason.pb.h>
 #include <aap_protobuf/service/navigationstatus/NavigationStatusMessageId.pb.h>
 #include <aap_protobuf/service/sensorsource/message/SensorType.pb.h>
+#include <aap_protobuf/service/radio/RadioMessageId.pb.h>
+#include <aap_protobuf/service/radio/RadioService.pb.h>
 
 
 namespace aasdk
@@ -77,6 +79,39 @@ TEST(ProtoAdditionsUnitTest, WirelessTcpConfiguration_BufferSizes)
     ASSERT_TRUE(configuration.ParseFromString(bytes({0x20, 0x80, 0x80, 0x04, 0x28, 0x80, 0x40})));
     EXPECT_EQ(configuration.socket_receive_buffer_size(), 65536u);
     EXPECT_EQ(configuration.socket_send_buffer_size(), 8192u);
+}
+
+
+TEST(ProtoAdditionsUnitTest, Radio_V2Ids)
+{
+    // right after v1 (ends at 0x8019)
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_STATE_NOTIFICATION, 0x8019);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_PROGRAM_LIST_NOTIFICATION, 0x801A);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_PROGRAM_INFO_NOTIFICATION, 0x801B);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_MUTE_REQUEST, 0x801C);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_MUTE_RESPONSE, 0x801D);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_TUNE_REQUEST, 0x801E);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_TUNE_RESPONSE, 0x801F);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_FAVORITE_LIST_NOTIFICATION, 0x8020);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_FAVORITE_TOGGLE_REQUEST, 0x8021);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_TUNE_DIRECTION_REQUEST, 0x8022);
+    EXPECT_EQ(radio::RadioMessageId::RADIO_MESSAGE_SEARCH_REQUEST, 0x8023);
+}
+
+TEST(ProtoAdditionsUnitTest, Radio_ServiceBandsInField2)
+{
+    // v2 band groups next to the v1 tuner list: field 2, field 1 unchanged
+    radio::RadioService service;
+    auto* group = service.mutable_bands()->add_groups();
+    group->add_band_types(radio::message::RADIO_BAND_TYPE_FM);
+    group->set_hide_empty_group(true);
+    EXPECT_EQ(service.SerializeAsString(), bytes({0x12, 0x06, 0x0A, 0x04, 0x08, 0x02, 0x10, 0x01}));
+
+    radio::RadioService parsed;
+    ASSERT_TRUE(parsed.ParseFromString(bytes({0x12, 0x06, 0x0A, 0x04, 0x08, 0x02, 0x10, 0x01})));
+    EXPECT_EQ(parsed.radio_properties_size(), 0);
+    ASSERT_EQ(parsed.bands().groups_size(), 1);
+    EXPECT_EQ(parsed.bands().groups(0).band_types(0), radio::message::RADIO_BAND_TYPE_FM);
 }
 
 }

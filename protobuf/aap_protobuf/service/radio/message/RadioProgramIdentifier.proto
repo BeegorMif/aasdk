@@ -1,0 +1,17 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/radio/message/RadioIdentifierType.proto";
+
+package aap_protobuf.service.radio.message;
+
+// Radio v2 (Android Auto 16.2+). Source: open-android-auto @ 61eab61, oaa/radio/RadioMessages.proto, confidence silver (APK static
+// analysis, not verified against a phone). average-web-dev/aasdk#32
+message RadioProgramIdentifier {
+  optional RadioIdentifierType type = 1;
+  // AMFM_FREQUENCY and DAB_FREQUENCY: kHz (oaa's band classification: FM is 60000 < value < 110000, like
+  // Android's ProgramSelector; a comment in oaa's proto says Hz). Station id for RDS PI, HD and DAB types;
+  // HD_STATION_ID_EXT has the subchannel in bits 32-33 and the frequency (kHz) from bit 36.
+  optional uint64 value = 2;
+}

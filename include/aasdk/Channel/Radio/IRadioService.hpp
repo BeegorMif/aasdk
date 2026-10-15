@@ -22,6 +22,11 @@
 #include "aasdk/Channel/IChannel.hpp"
 #include "aasdk/Messenger/ChannelId.hpp"
 #include <aap_protobuf/service/control/message/ChannelOpenResponse.pb.h>
+#include <aap_protobuf/service/radio/message/RadioProgramListNotification.pb.h>
+#include <aap_protobuf/service/radio/message/RadioProgramInfoNotification.pb.h>
+#include <aap_protobuf/service/radio/message/RadioMuteResponse.pb.h>
+#include <aap_protobuf/service/radio/message/RadioTuneResponse.pb.h>
+#include <aap_protobuf/service/radio/message/RadioFavoriteListNotification.pb.h>
 #include "IRadioServiceEventHandler.hpp"
 
 namespace aasdk::channel::radio {
@@ -40,5 +45,25 @@ namespace aasdk::channel::radio {
     sendChannelOpenResponse(const aap_protobuf::service::control::message::ChannelOpenResponse &response,
                             SendPromise::Pointer promise) = 0;
 
+    // Radio v2 (Android Auto 16.2+, #32): state of the head unit's tuner. The phone expects the station list,
+    // the current station and the favorites right after the channel is open, and again whenever they change.
+
+    virtual void sendProgramListNotification(
+        const aap_protobuf::service::radio::message::RadioProgramListNotification &notification,
+        SendPromise::Pointer promise) = 0;
+
+    virtual void sendProgramInfoNotification(
+        const aap_protobuf::service::radio::message::RadioProgramInfoNotification &notification,
+        SendPromise::Pointer promise) = 0;
+
+    virtual void sendMuteResponse(const aap_protobuf::service::radio::message::RadioMuteResponse &response,
+                                  SendPromise::Pointer promise) = 0;
+
+    virtual void sendTuneResponse(const aap_protobuf::service::radio::message::RadioTuneResponse &response,
+                                  SendPromise::Pointer promise) = 0;
+
+    virtual void sendFavoriteListNotification(
+        const aap_protobuf::service::radio::message::RadioFavoriteListNotification &notification,
+        SendPromise::Pointer promise) = 0;
   };
 }
