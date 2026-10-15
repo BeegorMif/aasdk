@@ -16,7 +16,7 @@
 */
 
 // Service channels in 2.0: channel close notification on every channel, new messages of #10 and the
-// vehicle energy forecast (#7, #10, openhu#54)
+// vehicle energy forecast (#7, #10, openhu#54); radio v2 (#32)
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -29,6 +29,8 @@
 #include <aasdk/Channel/InputSource/InputSourceService.hpp>
 #include <aasdk/Channel/NavigationStatus/NavigationStatusService.hpp>
 #include <aasdk/Channel/MediaBrowser/MediaBrowserService.hpp>
+#include <aasdk/Channel/Radio/RadioService.hpp>
+#include <aap_protobuf/service/radio/RadioMessageId.pb.h>
 #include <aap_protobuf/service/media/sink/MediaMessageId.pb.h>
 #include <aap_protobuf/service/sensorsource/SensorMessageId.pb.h>
 #include <aap_protobuf/service/inputsource/InputMessageId.pb.h>
@@ -100,6 +102,24 @@ public:
     MOCK_METHOD1(onChannelError, void(const error::Error&));
 };
 
+// an application that knows nothing about radio v2 (OpenHU today)
+class RadioMinimalHandlerMock: public radio::IRadioServiceEventHandler
+{
+public:
+    MOCK_METHOD1(onChannelOpenRequest, void(const pb::control::message::ChannelOpenRequest&));
+    MOCK_METHOD1(onChannelError, void(const error::Error&));
+};
+
+class RadioHandlerMock: public RadioMinimalHandlerMock
+{
+public:
+    MOCK_METHOD1(onMuteRequest, void(const pb::radio::message::RadioMuteRequest&));
+    MOCK_METHOD1(onTuneRequest, void(const pb::radio::message::RadioTuneRequest&));
+    MOCK_METHOD1(onFavoriteToggleRequest, void(const pb::radio::message::RadioFavoriteToggleRequest&));
+    MOCK_METHOD1(onTuneDirectionRequest, void(const pb::radio::message::RadioTuneDirectionRequest&));
+    MOCK_METHOD1(onSearchRequest, void(const pb::radio::message::RadioSearchRequest&));
+};
+
 class ServiceChannelsUnitTest : public testing::Test
 {
 protected:
@@ -133,8 +153,8 @@ protected:
         return static_cast<int>(promises.size()) - 1;
     }
 
-    // id of the message a sender put on the messenger
-    uint16_t sentId(const std::function<void(SendPromise::Pointer)>& send)
+    // id of the message a sender put on the messenger (payload behind the id in *payload)
+    uint16_t sentId(const std::function<void(SendPromise::Pointer)>& send, common::Data* payload = nullptr)
     {
         messenger::Message::Pointer message;
         EXPECT_CALL(*messenger_, enqueueSend(_, _)).WillOnce(SaveArg<0>(&message));
@@ -144,6 +164,10 @@ protected:
         {
             ADD_FAILURE() << "nothing sent";
             return 0;
+        }
+        if(payload != nullptr)
+        {
+            payload->assign(message->getPayload().begin() + 2, message->getPayload().end());
         }
         return message->getPayload()[0] << 8 | message->getPayload()[1];
     }
@@ -238,6 +262,87 @@ TEST_F(ServiceChannelsUnitTest, Navigation_VehicleEnergyForecast)
     EXPECT_EQ(deliver(navigation, handler, messenger::ChannelId::NAVIGATION_STATUS,
                       pb::navigationstatus::NavigationStatusMessageId::INSTRUMENT_CLUSTER_VEHICLE_ENERGY_FORECAST, {0x0A, 0x00}), 1);
     EXPECT_EQ(forecast, (common::Data{0x0A, 0x00}));
+}
+
+
+TEST_F(ServiceChannelsUnitTest, Radio_SendsV2Messages)
+{
+    auto radio = std::make_shared<radio::RadioService>(strand_, messenger_);
+    namespace msg = pb::radio::message;
+
+    msg::RadioProgramInfoNotification info;
+    auto* identifier = info.mutable_program_info()->mutable_program_selector()->mutable_primary_identifier();
+    identifier->set_type(msg::RADIO_IDENTIFIER_TYPE_AMFM_FREQUENCY);
+    identifier->set_value(96200);
+    info.mutable_program_info()->mutable_metadata()->set_station_name("NDR 2");
+    info.set_is_muted(false);
+    info.set_has_audio_focus(true);
+    common::Data payload;
+    EXPECT_EQ(sentId([&](auto p) { radio->sendProgramInfoNotification(info, std::move(p)); }, &payload),
+              pb::radio::RadioMessageId::RADIO_MESSAGE_PROGRAM_INFO_NOTIFICATION);
+    msg::RadioProgramInfoNotification parsed;
+    ASSERT_TRUE(parsed.ParseFromArray(payload.data(), static_cast<int>(payload.size())));
+    EXPECT_EQ(parsed.program_info().program_selector().primary_identifier().value(), 96200u);
+    EXPECT_EQ(parsed.program_info().metadata().station_name(), "NDR 2");
+    EXPECT_TRUE(parsed.has_audio_focus());
+
+    EXPECT_EQ(sentId([&](auto p) { radio->sendProgramListNotification(msg::RadioProgramListNotification(), std::move(p)); }),
+              0x801A);
+    msg::RadioMuteResponse mute;
+    mute.set_is_muted(true);
+    EXPECT_EQ(sentId([&](auto p) { radio->sendMuteResponse(mute, std::move(p)); }, &payload), 0x801D);
+    EXPECT_EQ(payload, (common::Data{0x08, 0x01}));
+    msg::RadioTuneResponse tune;
+    tune.set_status(msg::RADIO_TUNE_STATUS_SUCCESS);
+    EXPECT_EQ(sentId([&](auto p) { radio->sendTuneResponse(tune, std::move(p)); }, &payload), 0x801F);
+    EXPECT_EQ(payload, (common::Data{0x08, 0x01}));
+    EXPECT_EQ(sentId([&](auto p) { radio->sendFavoriteListNotification(msg::RadioFavoriteListNotification(), std::move(p)); }),
+              0x8020);
+}
+
+TEST_F(ServiceChannelsUnitTest, Radio_V2RequestsReachTheHandler)
+{
+    auto radio = std::make_shared<radio::RadioService>(strand_, messenger_);
+    auto handler = std::make_shared<testing::StrictMock<RadioHandlerMock>>();
+    const auto channel = messenger::ChannelId::RADIO;
+
+    EXPECT_CALL(*handler, onMuteRequest(testing::Property(&pb::radio::message::RadioMuteRequest::mute, true)));
+    EXPECT_EQ(deliver(radio, handler, channel, 0x801C, {0x08, 0x01}), 1);
+
+    // FM 101.9 MHz as kHz: 101900 = 0x18E0C
+    pb::radio::message::RadioTuneRequest tune;
+    EXPECT_CALL(*handler, onTuneRequest(_)).WillOnce(SaveArg<0>(&tune));
+    EXPECT_EQ(deliver(radio, handler, channel, 0x801E, {0x0A, 0x08, 0x0A, 0x06, 0x08, 0x01, 0x10, 0x8C, 0x9C, 0x06}), 1);
+    EXPECT_EQ(tune.program_selector().primary_identifier().type(),
+              pb::radio::message::RADIO_IDENTIFIER_TYPE_AMFM_FREQUENCY);
+    EXPECT_EQ(tune.program_selector().primary_identifier().value(), 101900u);
+
+    EXPECT_CALL(*handler, onFavoriteToggleRequest(
+        testing::Property(&pb::radio::message::RadioFavoriteToggleRequest::is_favorite, true)));
+    EXPECT_EQ(deliver(radio, handler, channel, 0x8021, {0x08, 0x01}), 1);
+
+    EXPECT_CALL(*handler, onTuneDirectionRequest(testing::Property(
+        &pb::radio::message::RadioTuneDirectionRequest::direction, pb::radio::message::RADIO_TUNE_DIRECTION_DOWN)));
+    EXPECT_EQ(deliver(radio, handler, channel, 0x8022, {0x08, 0x02}), 1);
+
+    EXPECT_CALL(*handler, onSearchRequest(
+        testing::Property(&pb::radio::message::RadioSearchRequest::action_id, "scan")));
+    EXPECT_EQ(deliver(radio, handler, channel, 0x8023, {0x0A, 0x04, 's', 'c', 'a', 'n'}), 1);
+}
+
+TEST_F(ServiceChannelsUnitTest, Radio_DefaultsAndUnexpectedMessagesKeepReceiving)
+{
+    auto radio = std::make_shared<radio::RadioService>(strand_, messenger_);
+    auto minimal = std::make_shared<testing::StrictMock<RadioMinimalHandlerMock>>();
+    // v2 request without an override, a v1 id, a head unit message sent by the phone
+    EXPECT_EQ(deliver(radio, minimal, messenger::ChannelId::RADIO, 0x801C, {0x08, 0x01}), 1);
+    EXPECT_EQ(deliver(radio, minimal, messenger::ChannelId::RADIO,
+                      pb::radio::RadioMessageId::RADIO_MESSAGE_MUTE_RADIO_REQUEST, {}), 1);
+    EXPECT_EQ(deliver(radio, minimal, messenger::ChannelId::RADIO, 0x801B, {}), 1);
+
+    // a request that does not parse is dropped, the channel stays open
+    auto handler = std::make_shared<testing::StrictMock<RadioHandlerMock>>();
+    EXPECT_EQ(deliver(radio, handler, messenger::ChannelId::RADIO, 0x801E, {0x0A, 0x7F}), 1);
 }
 
 }
