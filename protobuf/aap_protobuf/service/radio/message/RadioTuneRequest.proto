@@ -1,0 +1,15 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/radio/message/RadioProgramSelector.proto";
+
+package aap_protobuf.service.radio.message;
+
+// Radio v2 (Android Auto 16.2+). Source: open-android-auto @ 61eab61, oaa/radio/RadioMessages.proto, confidence silver (APK static
+// analysis, not verified against a phone). average-web-dev/aasdk#32
+// Phone -> HU (0x801E): tune to a station. Answer with RadioTuneResponse, then RadioProgramInfoNotification;
+// the phone gives up after 6 seconds.
+message RadioTuneRequest {
+  optional RadioProgramSelector program_selector = 1;
+}

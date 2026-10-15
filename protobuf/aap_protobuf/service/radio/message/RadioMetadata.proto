@@ -1,0 +1,29 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/radio/message/RadioImage.proto";
+import "aap_protobuf/service/radio/message/RadioProgramType.proto";
+import "aap_protobuf/service/radio/message/RadioSongMetadata.proto";
+
+package aap_protobuf.service.radio.message;
+
+// Radio v2 (Android Auto 16.2+). Source: open-android-auto @ 61eab61, oaa/radio/RadioMessages.proto, confidence silver (APK static
+// analysis, not verified against a phone). average-web-dev/aasdk#32
+message RadioMetadata {
+  optional string station_name = 1;
+  optional string station_name_short = 2;
+  optional string station_name_long = 3;
+  optional RadioProgramType program_type = 4;
+  optional RadioImage station_icon = 5;
+  optional RadioSongMetadata song_metadata = 6;
+  // station text, e.g. RDS radiotext
+  optional string message = 7;
+  // DAB service name
+  optional string service_name = 8;
+  optional uint32 hd_sub_channels_available = 9;
+  optional bool hd_signal_acquired = 10;
+  optional bool hd_audio_acquired = 11;
+  optional string dab_component_name = 12;
+  optional bool dts_autostage_enriched = 13;
+}

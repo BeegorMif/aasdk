@@ -1,0 +1,15 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.radio.message;
+
+// Radio v2 (Android Auto 16.2+). Source: open-android-auto @ 61eab61, oaa/radio/RadioBandTypeEnum.proto, confidence unverified (values from the 16.2 runtime enum) (APK static
+// analysis, not verified against a phone). average-web-dev/aasdk#32
+// Band of a RadioBandGroup in the service announcement
+enum RadioBandType {
+  RADIO_BAND_TYPE_UNKNOWN = 0;
+  RADIO_BAND_TYPE_AM = 1;
+  RADIO_BAND_TYPE_FM = 2;
+  RADIO_BAND_TYPE_DAB = 3;
+}
