@@ -8,7 +8,7 @@ endif()
 # minor version for new API or a changed ABI (e.g. new members in classes OpenHU creates, OpenHU
 # depends on one minor version), the major version for breaking API changes.
 # Releases are tagged openhu-v<version>.
-project(aasdk VERSION 2.0.0)
+project(aasdk VERSION 2.1.0)
 message(STATUS "AASDK Library")
 message(STATUS "Cross Compiling?")
 
