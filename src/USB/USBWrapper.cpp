@@ -16,6 +16,7 @@
 // along with aasdk. If not, see <http://www.gnu.org/licenses/>.
 
 #include <aasdk/USB/USBWrapper.hpp>
+#include <aasdk/Common/Log.hpp>
 
 
 namespace aasdk {
@@ -135,14 +136,23 @@ namespace aasdk {
     USBWrapper::hotplugRegisterCallback(libusb_hotplug_event events, libusb_hotplug_flag flags, int vendor_id,
                                         int product_id, int dev_class,
                                         libusb_hotplug_callback_fn cb_fn, void *user_data) {
-      libusb_hotplug_callback_handle raw_handle;
-      libusb_hotplug_register_callback(usbContext_, events, flags, vendor_id, product_id, dev_class, cb_fn, user_data,
-                                       &raw_handle);
+      libusb_hotplug_callback_handle raw_handle = 0;
+      const auto result = libusb_hotplug_register_callback(usbContext_, events, flags, vendor_id, product_id,
+                                                           dev_class, cb_fn, user_data, &raw_handle);
+      if (result != LIBUSB_SUCCESS) {
+        AASDK_LOG(error) << "[USBWrapper] registering the hotplug callback failed: " << libusb_error_name(result);
+        return HotplugCallbackHandle();
+      }
 
-      HotplugCallbackHandle handle(&raw_handle, [this](auto raw_handle) {
-        libusb_hotplug_deregister_callback(usbContext_, *raw_handle);
-      });
-      return handle;
+      // The handle has to outlive this call: the deleter deregisters exactly this callback. (It pointed to the
+      // local variable before, so the deregistration read a stale stack value and the callback usually stayed
+      // registered: every re-registration added one more callback for the same hub.)
+      auto *context = usbContext_;
+      return HotplugCallbackHandle(new libusb_hotplug_callback_handle(raw_handle),
+                                   [context](libusb_hotplug_callback_handle *handle) {
+                                     libusb_hotplug_deregister_callback(context, *handle);
+                                     delete handle;
+                                   });
     }
 
     libusb_transfer *USBWrapper::allocTransfer(int iso_packets) {

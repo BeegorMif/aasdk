@@ -20,10 +20,22 @@
 #include <aasdk/USB/DeviceFilter.hpp>
 #include <aasdk/USB/AccessoryModeQueryChain.hpp>
 #include <aasdk/Error/Error.hpp>
+#include <aasdk/Common/Log.hpp>
+#include <cstdio>
 
 
 namespace aasdk {
   namespace usb {
+
+    namespace {
+
+      std::string deviceId(const libusb_device_descriptor &descriptor) {
+        char id[10];
+        std::snprintf(id, sizeof(id), "%04x:%04x", descriptor.idVendor, descriptor.idProduct);
+        return id;
+      }
+
+    }
 
     USBHub::USBHub(IUSBWrapper &usbWrapper, boost::asio::io_service &ioService,
                    IAccessoryModeQueryChainFactory &queryChainFactory)
@@ -40,13 +52,27 @@ namespace aasdk {
         hotplugPromise_ = std::move(promise);
 
         if (self_ == nullptr) {
-          self_ = this->shared_from_this();
+          AASDK_LOG(info) << "[USBHub] registering the hotplug callback, connected devices follow";
+          // LIBUSB_HOTPLUG_ENUMERATE calls hotplugEventsHandler for every connected device before this returns,
+          // on this strand, so handleDevice runs inline for them.
           hotplugHandle_ = usbWrapper_.hotplugRegisterCallback(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED,
                                                                LIBUSB_HOTPLUG_ENUMERATE, LIBUSB_HOTPLUG_MATCH_ANY,
                                                                LIBUSB_HOTPLUG_MATCH_ANY,
                                                                LIBUSB_HOTPLUG_MATCH_ANY,
                                                                reinterpret_cast<libusb_hotplug_callback_fn>(&USBHub::hotplugEventsHandler),
                                                                reinterpret_cast<void *>(this));
+          if (hotplugHandle_ == nullptr) {
+            // nobody would ever resolve the promise: tell the caller, the next start() tries again
+            AASDK_LOG(error) << "[USBHub] hotplug callback not registered, no USB device will be found";
+            if (hotplugPromise_ != nullptr) {
+              hotplugPromise_->reject(error::Error(error::ErrorCode::USB_LIST_DEVICES));
+              hotplugPromise_.reset();
+            }
+            return;
+          }
+          self_ = this->shared_from_this();
+        } else {
+          AASDK_LOG(debug) << "[USBHub] waiting for devices (hotplug callback already registered)";
         }
       });
     }
@@ -62,6 +88,7 @@ namespace aasdk {
                       std::bind(&IAccessoryModeQueryChain::cancel, std::placeholders::_1));
 
         if (self_ != nullptr) {
+          AASDK_LOG(debug) << "[USBHub] cancelled, hotplug callback deregistered";
           hotplugHandle_.reset();
           self_.reset();
         }
@@ -84,15 +111,20 @@ namespace aasdk {
     }
 
     void USBHub::handleDevice(libusb_device *device) {
-      if (hotplugPromise_ == nullptr) {
-        return;
-      }
-
       libusb_device_descriptor deviceDescriptor;
       if (usbWrapper_.getDeviceDescriptor(device, deviceDescriptor) != 0) {
+        AASDK_LOG(warning) << "[USBHub] device arrived, reading its descriptor failed";
+        return;
+      }
+      const auto id = deviceId(deviceDescriptor);
+
+      if (hotplugPromise_ == nullptr) {
+        // nobody waits (a session runs): the caller registers again (start after cancel) when it waits again
+        AASDK_LOG(info) << "[USBHub] " << id << " arrived, ignored: nobody is waiting for a device";
         return;
       }
       if (!this->isAOAPDevice(deviceDescriptor) && isCertainlyNotPhone(usbWrapper_, device, deviceDescriptor)) {
+        AASDK_LOG(debug) << "[USBHub] " << id << " arrived, skipped: not a phone";
         return;
       }
 
@@ -100,22 +132,32 @@ namespace aasdk {
       auto openResult = usbWrapper_.open(device, handle);
 
       if (openResult != 0) {
+        AASDK_LOG(warning) << "[USBHub] " << id << " arrived, opening it failed: "
+                           << libusb_error_name(openResult);
         return;
       }
 
       if (this->isAOAPDevice(deviceDescriptor)) {
+        AASDK_LOG(info) << "[USBHub] " << id << " is in accessory mode, handing it over";
         hotplugPromise_->resolve(std::move(handle));
         hotplugPromise_.reset();
       } else {
+        AASDK_LOG(info) << "[USBHub] " << id << " arrived, sending the accessory mode requests";
         queryChainQueue_.emplace_back(queryChainFactory_.create());
 
         auto queueElementIter = std::prev(queryChainQueue_.end());
         auto queryChainPromise = IAccessoryModeQueryChain::Promise::defer(strand_);
-        queryChainPromise->then([this, self = this->shared_from_this(), queueElementIter](DeviceHandle handle) mutable {
+        // The device comes back with another id (accessory mode) and arrives as a new device; this hub has to be
+        // waiting by then, which the promise above still is (only an accessory resolves it).
+        queryChainPromise->then([this, self = this->shared_from_this(), queueElementIter, id](DeviceHandle) mutable {
+                                  AASDK_LOG(info) << "[USBHub] " << id
+                                                  << " accepted the accessory mode requests, waiting for it to come back as accessory";
                                   queryChainQueue_.erase(queueElementIter);
                                 },
-                                [this, self = this->shared_from_this(), queueElementIter](
+                                [this, self = this->shared_from_this(), queueElementIter, id](
                                     const error::Error &e) mutable {
+                                  AASDK_LOG(info) << "[USBHub] accessory mode requests to " << id << " failed: "
+                                                  << e.what();
                                   queryChainQueue_.erase(queueElementIter);
                                 });
 
