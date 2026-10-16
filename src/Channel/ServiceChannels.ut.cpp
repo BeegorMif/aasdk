@@ -276,7 +276,7 @@ TEST_F(ServiceChannelsUnitTest, Radio_SendsV2Messages)
     identifier->set_value(96200);
     info.mutable_program_info()->mutable_metadata()->set_station_name("NDR 2");
     info.set_is_muted(false);
-    info.set_has_audio_focus(true);
+    info.set_is_favorite(true);
     common::Data payload;
     EXPECT_EQ(sentId([&](auto p) { radio->sendProgramInfoNotification(info, std::move(p)); }, &payload),
               pb::radio::RadioMessageId::RADIO_MESSAGE_PROGRAM_INFO_NOTIFICATION);
@@ -284,7 +284,7 @@ TEST_F(ServiceChannelsUnitTest, Radio_SendsV2Messages)
     ASSERT_TRUE(parsed.ParseFromArray(payload.data(), static_cast<int>(payload.size())));
     EXPECT_EQ(parsed.program_info().program_selector().primary_identifier().value(), 96200u);
     EXPECT_EQ(parsed.program_info().metadata().station_name(), "NDR 2");
-    EXPECT_TRUE(parsed.has_audio_focus());
+    EXPECT_TRUE(parsed.is_favorite());
 
     EXPECT_EQ(sentId([&](auto p) { radio->sendProgramListNotification(msg::RadioProgramListNotification(), std::move(p)); }),
               0x801A);
