@@ -493,7 +493,7 @@ else()
 endif()
 
 set(CPACK_PACKAGE_VENDOR "OpenHU")
-set(CPACK_PACKAGE_CONTACT "Leon Strauß <package.deb@alias.strauss-hub.de>")
+set(CPACK_PACKAGE_CONTACT "Leon Strauß <openhu.dev@alias.strauss-hub.de>")
 set(CPACK_PACKAGE_VERSION ${LIBRARY_VERSION_STRING})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Android Auto SDK Library")
 set(CPACK_PACKAGE_DESCRIPTION "Android Auto SDK (AASDK) is a library for implementing Android Auto functionality in C++ applications.")
