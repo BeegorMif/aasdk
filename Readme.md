@@ -114,6 +114,7 @@ changes can be tested before pushing.
 | `include/aasdk/Messenger` | TLS (`Cryptor`), message framing, send/receive queues |
 | `include/aasdk/Channel/*` | One service per channel, each with an `I…ServiceEventHandler` interface |
 | `protobuf/` | Android Auto protocol definitions (`aap_protobuf`) |
+| `tools/` | `capture_summary.py` (summary of a protocol capture), `proto_compare.py` (compares two proto trees) |
 
 ## Documentation
 
@@ -125,6 +126,7 @@ changes can be tested before pushing.
 | 🔧 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | USB permissions, build errors, debugging |
 | 📦 [PACKAGING.md](PACKAGING.md) | Debian packages and versions |
 | 📝 [MODERN_LOGGER.md](MODERN_LOGGER.md) | Logging categories |
+| 🧬 [docs/protocol-sources.md](docs/protocol-sources.md) | Where the protocol definitions come from and what a phone confirmed |
 
 ## Issues and contributing
 
@@ -135,7 +137,7 @@ Pull requests are welcome. If a change is useful beyond OpenHU, it is better sen
 
 ## License
 
-**GNU GPLv3.** Copyright © 2018 f1x.studio (Michal Szwaj), extended by the OpenCarDev community and the OpenHU
+**GNU GPLv3**, see [LICENSE](LICENSE). Copyright © 2018 f1x.studio (Michal Szwaj), extended by the OpenCarDev community and the OpenHU
 contributors.
 
 Built on [Boost](https://www.boost.org/), [libusb](https://libusb.info/), [OpenSSL](https://www.openssl.org/),
