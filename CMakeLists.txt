@@ -492,12 +492,12 @@ else()
     set(CPACK_PACKAGE_NAME "libaasdk")
 endif()
 
-set(CPACK_PACKAGE_VENDOR "AASDK")
-set(CPACK_PACKAGE_CONTACT "OpenCarDev Team <opencardevuk@gmail.com>")
+set(CPACK_PACKAGE_VENDOR "OpenHU")
+set(CPACK_PACKAGE_CONTACT "Leon Strauß <openhu.dev@alias.strauss-hub.de>")
 set(CPACK_PACKAGE_VERSION ${LIBRARY_VERSION_STRING})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Android Auto SDK Library")
 set(CPACK_PACKAGE_DESCRIPTION "Android Auto SDK (AASDK) is a library for implementing Android Auto functionality in C++ applications.")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/opencardev/aasdk")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/average-web-dev/aasdk")
 
 # Set the correct install prefix for packaging
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -505,10 +505,10 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # Debian package configuration
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "AASDK <opencardevuk@gmail.com>")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_CONTACT}")
 set(CPACK_DEBIAN_PACKAGE_SECTION "libs")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/opencardev/aasdk")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "${CPACK_PACKAGE_HOMEPAGE_URL}")
 
 # Compute runtime Depends automatically per distro/arch using dpkg-shlibdeps
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
