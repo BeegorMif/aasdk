@@ -1,0 +1,19 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// open-android-auto has the access mode in this field (CarPropertyConfig field 2).
+enum CarPropertyValueType {
+  CAR_PROPERTY_VALUE_TYPE_UNKNOWN = 0;  // the phone skips the config
+  CAR_PROPERTY_VALUE_TYPE_INT32 = 1;
+  CAR_PROPERTY_VALUE_TYPE_BOOL = 2;
+  CAR_PROPERTY_VALUE_TYPE_FLOAT = 3;
+  CAR_PROPERTY_VALUE_TYPE_INT64 = 4;
+  CAR_PROPERTY_VALUE_TYPE_STRING = 5;
+  CAR_PROPERTY_VALUE_TYPE_FLOAT_ARRAY = 6;
+  CAR_PROPERTY_VALUE_TYPE_INT32_ARRAY = 7;
+  CAR_PROPERTY_VALUE_TYPE_INT64_ARRAY = 8;
+}

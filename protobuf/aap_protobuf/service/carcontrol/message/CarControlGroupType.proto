@@ -1,0 +1,11 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+enum CarControlGroupType {
+  CAR_CONTROL_GROUP_TYPE_UNKNOWN = 0;
+  CAR_CONTROL_GROUP_TYPE_PRIMARY = 1;  // the only group the rail shows
+}

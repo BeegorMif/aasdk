@@ -1,0 +1,50 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Android VHAL property ids that Android Auto 17.9 knows. Fields that carry a property id are int32, so other ids
+// can be sent too (the phone keeps them but has no widget for them).
+// Source: Android Auto 17.9 app analysis. average-web-dev/aasdk#40
+// HVAC_TEMPERATURE_SET, HVAC_SEAT_TEMPERATURE, HVAC_STEERING_WHEEL_HEAT, HVAC_AC_ON, HVAC_TEMPERATURE_DISPLAY_UNITS,
+// HVAC_POWER_ON and IGNITION_STATE were verified with a phone (openhu#121).
+enum VehiclePropertyId {
+  VEHICLE_PROPERTY_UNKNOWN = 0;
+  // float, seat areas, values in Celsius. config_array (tenths): min, max, step in Celsius, then in Fahrenheit,
+  // e.g. [160, 280, 5, 610, 820, 10]. Values must lie on that grid; min and max are shown as LO and HI.
+  HVAC_TEMPERATURE_SET = 358614275;
+  HVAC_AUTO_ON = 354419978;
+  HVAC_DUAL_ON = 354419977;
+  // int32, seat areas: > 0 heating levels up to the area max, < 0 cooling down to the area min
+  HVAC_SEAT_TEMPERATURE = 356517131;
+  // int32, seat areas, range from the area config
+  HVAC_FAN_SPEED = 356517120;
+  HVAC_FAN_DIRECTION = 356517121;
+  HVAC_FAN_DIRECTION_AVAILABLE = 356582673;
+  ELECTRONIC_TOLL_COLLECTION_CARD_STATUS = 289410874;
+  // int32, global: 48 Celsius, 49 Fahrenheit (VHAL VehicleUnit). Without it the rail temperature shows "OFF".
+  HVAC_TEMPERATURE_DISPLAY_UNITS = 289408270;
+  HVAC_AC_ON = 354419973;
+  HVAC_MAX_AC_ON = 354419974;
+  // bool, window areas
+  HVAC_DEFROSTER = 320865540;
+  HVAC_MAX_DEFROST_ON = 354419975;
+  // bool, seat areas; config_array lists the property ids that need HVAC power
+  HVAC_POWER_ON = 354419984;
+  HVAC_AUTO_RECIRC_ON = 354419986;
+  HVAC_RECIRC_ON = 354419976;
+  HVAC_SEAT_VENTILATION = 356517139;
+  HVAC_SIDE_MIRROR_HEAT = 339739916;
+  // int32, global, levels 0 to the area max
+  HVAC_STEERING_WHEEL_HEAT = 289408269;
+  DOOR_LOCK = 371198722;
+  // int32, global: the controls are available only with 4 (VHAL VehicleIgnitionState ON)
+  IGNITION_STATE = 289408009;
+  HMG_HVAC_MTC_TEMPERATURE = 624984185;
+  HMG_HVAC_TEMPERATURE_RANGE = 557940737;
+  HMG_HVAC_TEMPERATURE_SET_CELSIUS = 627081341;
+  HMG_HVAC_TEMPERATURE_SET_FAHRENHEIT = 627081339;
+  HMG_CAR_ALERTS_COUNT = 34908672;
+  HMG_MAIN_CONTENT_AREA_OVERLAY = 34908673;
+}

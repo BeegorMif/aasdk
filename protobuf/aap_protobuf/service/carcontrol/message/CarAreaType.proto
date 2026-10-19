@@ -1,0 +1,18 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Area type of a CarPropertyConfig; must match the areas of its area configs. Any other value (e.g. 1) makes
+// Android Auto throw while building the rail.
+// Source: Android Auto 17.9 app analysis. average-web-dev/aasdk#40
+// GLOBAL and SEAT verified with a phone (openhu#121).
+enum CarAreaType {
+  CAR_AREA_TYPE_GLOBAL = 0;
+  CAR_AREA_TYPE_WINDOW = 2;
+  CAR_AREA_TYPE_SEAT = 3;
+  CAR_AREA_TYPE_DOOR = 4;
+  CAR_AREA_TYPE_MIRROR = 5;
+  CAR_AREA_TYPE_WHEEL = 6;
+}

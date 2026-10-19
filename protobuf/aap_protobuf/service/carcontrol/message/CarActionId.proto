@@ -1,0 +1,18 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+// LAUNCH_HVAC is sent by the phone when the user taps an action control. open-android-auto: 3 HVAC, 4 car media,
+// 5 control center, 6 car alerts.
+enum CarActionId {
+  CAR_ACTION_UNKNOWN = 0;
+  CAR_ACTION_LAUNCH_HVAC = 1;
+  CAR_ACTION_LAUNCH_CAR_MEDIA = 2;
+  CAR_ACTION_LAUNCH_CONTROL_CENTER = 3;
+  CAR_ACTION_LAUNCH_CAR_ALERTS = 4;
+  CAR_ACTION_DISMISS_OVERLAY = 5;      // sent only if the head unit supports it
+  CAR_ACTION_SHOW_CAMERA_OVERLAY = 6;  // the phone adds a camera launcher if supported
+}

@@ -1,0 +1,18 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarAreaId.proto";
+import "aap_protobuf/service/carcontrol/message/CarPropertyValue.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Range of one area. Without min and max the phone uses 0 for both. The temperature grid comes from the
+// config_array, not from here.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// open-android-auto has min and max swapped.
+message CarAreaConfig {
+  optional CarAreaId area = 1;
+  optional CarPropertyValue max_value = 2;
+  optional CarPropertyValue min_value = 3;
+}

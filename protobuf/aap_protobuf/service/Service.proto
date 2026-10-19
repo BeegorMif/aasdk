@@ -15,6 +15,10 @@ import "aap_protobuf/service/genericnotification/GenericNotificationService.prot
 import "aap_protobuf/service/phonestatus/PhoneStatusService.proto";
 import "aap_protobuf/service/mediaplayback/MediaPlaybackStatusService.proto";
 import "aap_protobuf/service/radio/RadioService.proto";
+import "aap_protobuf/service/carcontrol/CarControlService.proto";
+import "aap_protobuf/service/carlocalmedia/CarLocalMediaService.proto";
+import "aap_protobuf/service/bufferedmedia/BufferedMediaSinkService.proto";
+import "aap_protobuf/service/carintent/CarIntentService.proto";
 
 package aap_protobuf.service;
 
@@ -34,4 +38,10 @@ message Service
     optional vendorextension.VendorExtensionService vendor_extension_service = 12;
     optional genericnotification.GenericNotificationService generic_notification_service = 13;
     optional wifiprojection.WifiProjectionService wifi_projection_service = 14;
+    // Fields 15-18: Android Auto 17.9 app analysis, average-web-dev/aasdk#40. Announcing a service makes the phone
+    // open its channel, so announce it only with a handler. Car control verified with a phone (openhu#121).
+    optional carcontrol.CarControlService car_control_service = 15;
+    optional carlocalmedia.CarLocalMediaService car_local_media_service = 16;
+    optional bufferedmedia.BufferedMediaSinkService buffered_media_sink_service = 17;
+    optional carintent.CarIntentService car_intent_service = 18;
 }

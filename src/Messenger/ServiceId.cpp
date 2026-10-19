@@ -49,6 +49,8 @@ namespace aasdk {
           return "GENERIC_NOTIFICATION";
         case ServiceId::WIFI_PROJECTION:
           return "WIFI_PROJECTION";
+        case ServiceId::CAR_CONTROL:
+          return "CAR_CONTROL";
         case ServiceId::NONE:
           return "NONE";
         default:

@@ -1,0 +1,11 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Set CarAreaId.global (to GLOBAL_AREA) for a property of the whole car.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+enum GlobalArea {
+  GLOBAL_AREA = 0;
+}

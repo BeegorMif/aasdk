@@ -1,0 +1,15 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Where the rail shows a control: driver or passenger side (left/right follows the driver position).
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// open-android-auto: 1 driver, 2 passenger.
+enum CarControlSideAffinity {
+  CAR_CONTROL_SIDE_AFFINITY_UNKNOWN = 0;
+  CAR_CONTROL_SIDE_AFFINITY_NONE = 1;  // shown like UNKNOWN; name inferred
+  CAR_CONTROL_SIDE_AFFINITY_DRIVER = 2;
+  CAR_CONTROL_SIDE_AFFINITY_PASSENGER = 3;
+}

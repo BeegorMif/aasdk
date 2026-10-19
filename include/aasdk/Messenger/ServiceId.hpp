@@ -36,6 +36,7 @@ namespace aasdk {
       VENDOR_EXTENSION,
       GENERIC_NOTIFICATION,
       WIFI_PROJECTION,
+      CAR_CONTROL,
       NONE = 255
     };
 

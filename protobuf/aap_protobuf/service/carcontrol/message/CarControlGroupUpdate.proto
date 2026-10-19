@@ -1,0 +1,13 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarControl.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+// 0x8007: replaces the group with the same type on the phone.
+message CarControlGroupUpdate {
+  optional CarControlGroup group = 1;
+}

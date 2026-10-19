@@ -1,0 +1,17 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarProperty.proto";
+import "aap_protobuf/shared/MessageStatus.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message SetCarPropertyValueResponse {
+  optional CarProperty property = 1;
+  // STATUS_SUCCESS, or e.g. STATUS_CAR_PROPERTY_SET_REQUEST_FAILED
+  optional aap_protobuf.shared.MessageStatus status = 2;
+  optional string request_id = 3;  // required by the phone: the request's UUID
+  optional int32 error_code = 4;   // free value, the phone only logs it
+}

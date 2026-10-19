@@ -1,0 +1,13 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarAreaId.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message CarProperty {
+  optional int32 property_id = 1;  // VehiclePropertyId or another VHAL id
+  optional CarAreaId area = 2;
+}

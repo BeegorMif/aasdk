@@ -119,6 +119,7 @@ namespace aasdk { namespace common { namespace log_detail {
 #define AASDK_LOG_CHANNEL_NOTIFICATION(severity, message) AASDK_LOG_CATEGORY(CHANNEL_NOTIFICATION, severity, message)
 #define AASDK_LOG_CHANNEL_VENDOR_EXT(severity, message) AASDK_LOG_CATEGORY(CHANNEL_VENDOR_EXT, severity, message)
 #define AASDK_LOG_CHANNEL_WIFI_PROJECTION(severity, message) AASDK_LOG_CATEGORY(CHANNEL_WIFI_PROJECTION, severity, message)
+#define AASDK_LOG_CHANNEL_CAR_CONTROL(severity, message) AASDK_LOG_CATEGORY(CHANNEL_CAR_CONTROL, severity, message)
 #define AASDK_LOG_CHANNEL_MEDIA_BROWSER(severity, message) AASDK_LOG_CATEGORY(CHANNEL_MEDIA_BROWSER, severity, message)
 #define AASDK_LOG_CHANNEL_PLAYBACK_STATUS(severity, message) AASDK_LOG_CATEGORY(CHANNEL_PLAYBACK_STATUS, severity, message)
 
