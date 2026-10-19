@@ -1,0 +1,14 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+// Android Auto 17.9 does not read this field; READ_WRITE (3) is what the phone test used. Values 1 and 2 are inferred.
+enum CarPropertyAccess {
+  CAR_PROPERTY_ACCESS_UNKNOWN = 0;
+  CAR_PROPERTY_ACCESS_READ = 1;
+  CAR_PROPERTY_ACCESS_WRITE = 2;
+  CAR_PROPERTY_ACCESS_READ_WRITE = 3;
+}

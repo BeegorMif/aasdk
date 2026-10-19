@@ -59,6 +59,8 @@ namespace aasdk::messenger {
         return "GENERIC_NOTIFICATION";
       case ChannelId::WIFI_PROJECTION:
         return "WIFI_PROJECTION";
+      case ChannelId::CAR_CONTROL:
+        return "CAR_CONTROL";
       case ChannelId::NONE:
         return "NONE";
       default:

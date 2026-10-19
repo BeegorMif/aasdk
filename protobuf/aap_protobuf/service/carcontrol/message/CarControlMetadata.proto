@@ -1,0 +1,12 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+enum CarControlMetadata {
+  CAR_CONTROL_METADATA_UNKNOWN = 0;
+  CAR_CONTROL_METADATA_COMPACT_UI = 1;          // takes one slot in the rail
+  CAR_CONTROL_METADATA_PREFER_STATUS_BAR = 2;   // not shown in the rail
+}

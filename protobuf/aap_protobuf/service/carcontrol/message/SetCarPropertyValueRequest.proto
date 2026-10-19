@@ -1,0 +1,17 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarProperty.proto";
+import "aap_protobuf/service/carcontrol/message/CarPropertyValue.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// 0x8001: the user changed a control. Answer with SetCarPropertyValueResponse and a CarPropertyChangeEvent with the
+// new value; the phone shows the value optimistically and falls back after 2 seconds without that event.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message SetCarPropertyValueRequest {
+  optional CarProperty property = 1;
+  optional CarPropertyValue value = 2;
+  optional string request_id = 3;  // UUID
+}

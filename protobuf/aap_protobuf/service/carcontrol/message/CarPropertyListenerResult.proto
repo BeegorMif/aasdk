@@ -1,0 +1,15 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarProperty.proto";
+import "aap_protobuf/shared/MessageStatus.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message CarPropertyListenerResult {
+  optional CarProperty property = 1;
+  // only STATUS_CAR_PROPERTY_LISTENER_REGISTRATION_FAILED has an effect (property unavailable)
+  optional aap_protobuf.shared.MessageStatus status = 2;
+}

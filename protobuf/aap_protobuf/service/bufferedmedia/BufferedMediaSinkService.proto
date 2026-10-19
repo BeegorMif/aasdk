@@ -1,0 +1,11 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.bufferedmedia;
+
+// Buffered media sink (service type 21). An empty message: presence only; the phone creates the
+// service only for a staged experiment flag, so it is inactive for normal users.
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+message BufferedMediaSinkService {
+}

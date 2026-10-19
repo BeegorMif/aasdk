@@ -1,0 +1,14 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarProperty.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// 0x8003: the phone subscribes to properties (when the channel opens and when a widget needs one). Send the current
+// value of each as CarPropertyChangeEvent, and every change after that.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message RegisterCarPropertyListenersRequest {
+  repeated CarProperty properties = 1;
+}

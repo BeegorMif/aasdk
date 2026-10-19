@@ -1,0 +1,13 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarAction.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+// 0x8006: the user tapped an action control.
+message CarActionNotification {
+  optional CarAction action = 1;
+}

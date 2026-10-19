@@ -1,0 +1,17 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol;
+
+// Car control channel (service type 19 in Android Auto). average-web-dev/aasdk#40
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+enum CarControlMessageId {
+  CAR_CONTROL_MESSAGE_SET_CAR_PROPERTY_VALUE_REQUEST = 32769;            // 0x8001 phone -> HU
+  CAR_CONTROL_MESSAGE_SET_CAR_PROPERTY_VALUE_RESPONSE = 32770;           // 0x8002 HU -> phone
+  CAR_CONTROL_MESSAGE_REGISTER_CAR_PROPERTY_LISTENERS_REQUEST = 32771;   // 0x8003 phone -> HU
+  CAR_CONTROL_MESSAGE_REGISTER_CAR_PROPERTY_LISTENERS_RESPONSE = 32772;  // 0x8004 HU -> phone
+  CAR_CONTROL_MESSAGE_CAR_PROPERTY_CHANGE_EVENT = 32773;                 // 0x8005 HU -> phone
+  CAR_CONTROL_MESSAGE_CAR_ACTION_NOTIFICATION = 32774;                   // 0x8006 phone -> HU
+  CAR_CONTROL_MESSAGE_CAR_CONTROL_GROUP_UPDATE = 32775;                  // 0x8007 HU -> phone
+}

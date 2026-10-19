@@ -1,0 +1,11 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carintent;
+
+// Car intent (service type 22). An empty message: presence enables the channel; the phone delivers
+// its messages only with the phenotype flag AdasRouteInfoFeature__car_intent_enabled (default off).
+// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+message CarIntentService {
+}

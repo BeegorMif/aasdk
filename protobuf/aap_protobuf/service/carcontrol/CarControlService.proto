@@ -1,0 +1,20 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarPropertyConfig.proto";
+import "aap_protobuf/service/carcontrol/message/CarControl.proto";
+import "aap_protobuf/service/carcontrol/message/CarActionEntry.proto";
+
+package aap_protobuf.service.carcontrol;
+
+// Service field 15. Property configs, the control layout for the phone's climate rail and the supported actions.
+// The rail exists only in Android Auto's "hero" layout, which needs a video resolution above 720p.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// open-android-auto (16.2 layout) differs in CarPropertyConfig, CarAreaId, CarAreaConfig and several enums.
+message CarControlService {
+  repeated message.CarPropertyConfig property_configs = 1;
+  // every entry must be a control group (CarControl.control_group); the rail shows only the PRIMARY group
+  repeated message.CarControl controls = 2;
+  repeated message.CarActionEntry supported_actions = 3;
+}

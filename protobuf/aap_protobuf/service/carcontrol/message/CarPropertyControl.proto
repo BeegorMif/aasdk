@@ -1,0 +1,17 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarProperty.proto";
+import "aap_protobuf/service/carcontrol/message/CarAction.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message CarPropertyControl {
+  optional CarProperty property = 1;
+  // e.g. LAUNCH_HVAC for a temperature control
+  optional CarAction associated_action = 2;
+  // e.g. HVAC_AC_ON for a temperature control, HVAC_AUTO_ON for the fan speed
+  optional CarProperty associated_property = 3;
+}

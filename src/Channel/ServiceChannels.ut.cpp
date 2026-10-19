@@ -16,7 +16,7 @@
 */
 
 // Service channels in 2.0: channel close notification on every channel, new messages of #10 and the
-// vehicle energy forecast (#7, #10, openhu#54); radio v2 (#32)
+// vehicle energy forecast (#7, #10, openhu#54); radio v2 (#32); car control (#40)
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,6 +30,9 @@
 #include <aasdk/Channel/NavigationStatus/NavigationStatusService.hpp>
 #include <aasdk/Channel/MediaBrowser/MediaBrowserService.hpp>
 #include <aasdk/Channel/Radio/RadioService.hpp>
+#include <aasdk/Channel/CarControl/CarControlService.hpp>
+#include <aap_protobuf/service/carcontrol/CarControlMessageId.pb.h>
+#include <aap_protobuf/service/carcontrol/message/VehiclePropertyId.pb.h>
 #include <aap_protobuf/service/radio/RadioMessageId.pb.h>
 #include <aap_protobuf/service/media/sink/MediaMessageId.pb.h>
 #include <aap_protobuf/service/sensorsource/SensorMessageId.pb.h>
@@ -118,6 +121,21 @@ public:
     MOCK_METHOD1(onFavoriteToggleRequest, void(const pb::radio::message::RadioFavoriteToggleRequest&));
     MOCK_METHOD1(onTuneDirectionRequest, void(const pb::radio::message::RadioTuneDirectionRequest&));
     MOCK_METHOD1(onSearchRequest, void(const pb::radio::message::RadioSearchRequest&));
+};
+
+class CarControlMinimalHandlerMock: public carcontrol::ICarControlServiceEventHandler
+{
+public:
+    MOCK_METHOD1(onChannelOpenRequest, void(const pb::control::message::ChannelOpenRequest&));
+    MOCK_METHOD1(onChannelError, void(const error::Error&));
+};
+
+class CarControlHandlerMock: public CarControlMinimalHandlerMock
+{
+public:
+    MOCK_METHOD1(onRegisterListenersRequest, void(const pb::carcontrol::message::RegisterCarPropertyListenersRequest&));
+    MOCK_METHOD1(onSetPropertyValueRequest, void(const pb::carcontrol::message::SetCarPropertyValueRequest&));
+    MOCK_METHOD1(onCarActionNotification, void(const pb::carcontrol::message::CarActionNotification&));
 };
 
 class ServiceChannelsUnitTest : public testing::Test
@@ -343,6 +361,77 @@ TEST_F(ServiceChannelsUnitTest, Radio_DefaultsAndUnexpectedMessagesKeepReceiving
     // a request that does not parse is dropped, the channel stays open
     auto handler = std::make_shared<testing::StrictMock<RadioHandlerMock>>();
     EXPECT_EQ(deliver(radio, handler, messenger::ChannelId::RADIO, 0x801E, {0x0A, 0x7F}), 1);
+}
+
+TEST_F(ServiceChannelsUnitTest, CarControl_SendsMessages)
+{
+    auto carControl = std::make_shared<carcontrol::CarControlService>(strand_, messenger_);
+    namespace msg = pb::carcontrol::message;
+    EXPECT_EQ(carControl->getId(), messenger::ChannelId::CAR_CONTROL);
+
+    msg::CarPropertyChangeEvent event;
+    event.mutable_property()->set_property_id(msg::HVAC_AC_ON);
+    event.mutable_property()->mutable_area()->set_global(msg::GLOBAL_AREA);
+    event.mutable_value()->set_bool_value(true);
+    event.set_status(msg::CAR_PROPERTY_STATUS_AVAILABLE);
+    common::Data payload;
+    EXPECT_EQ(sentId([&](auto p) { carControl->sendPropertyChangeEvent(event, std::move(p)); }, &payload), 0x8005);
+    msg::CarPropertyChangeEvent parsed;
+    ASSERT_TRUE(parsed.ParseFromArray(payload.data(), static_cast<int>(payload.size())));
+    EXPECT_TRUE(parsed.value().bool_value());
+
+    msg::SetCarPropertyValueResponse response;
+    response.set_status(aap_protobuf::shared::MessageStatus::STATUS_SUCCESS);
+    response.set_request_id("e8c20e00-d3d6-4bd1-94a0-7c16972207ae");
+    EXPECT_EQ(sentId([&](auto p) { carControl->sendSetPropertyValueResponse(response, std::move(p)); }), 0x8002);
+    EXPECT_EQ(sentId([&](auto p) {
+        carControl->sendRegisterListenersResponse(msg::RegisterCarPropertyListenersResponse(), std::move(p)); }), 0x8004);
+    EXPECT_EQ(sentId([&](auto p) { carControl->sendControlGroupUpdate(msg::CarControlGroupUpdate(), std::move(p)); }),
+              0x8007);
+}
+
+TEST_F(ServiceChannelsUnitTest, CarControl_RequestsReachTheHandler)
+{
+    auto carControl = std::make_shared<carcontrol::CarControlService>(strand_, messenger_);
+    auto handler = std::make_shared<testing::StrictMock<CarControlHandlerMock>>();
+    const auto channel = messenger::ChannelId::CAR_CONTROL;
+    namespace msg = pb::carcontrol::message;
+
+    EXPECT_CALL(*handler, onChannelOpenRequest(_));
+    EXPECT_EQ(deliver(carControl, handler, channel, pb::control::message::ControlMessageType::MESSAGE_CHANNEL_OPEN_REQUEST,
+                      {0x08, 0x00, 0x10, 0x13}, messenger::MessageType::CONTROL), 0);
+
+    // HVAC_AC_ON (354419973), global area
+    msg::RegisterCarPropertyListenersRequest registration;
+    EXPECT_CALL(*handler, onRegisterListenersRequest(_)).WillOnce(SaveArg<0>(&registration));
+    EXPECT_EQ(deliver(carControl, handler, channel, 0x8003,
+                      {0x0A, 0x0A, 0x08, 0x85, 0x8A, 0x80, 0xA9, 0x01, 0x12, 0x02, 0x08, 0x00}), 1);
+    ASSERT_EQ(registration.properties_size(), 1);
+    EXPECT_EQ(registration.properties(0).property_id(), msg::HVAC_AC_ON);
+
+    EXPECT_CALL(*handler, onSetPropertyValueRequest(testing::Property(
+        &msg::SetCarPropertyValueRequest::request_id, "1")));
+    EXPECT_EQ(deliver(carControl, handler, channel, 0x8001, {0x1A, 0x01, '1'}), 1);
+
+    msg::CarActionNotification action;
+    EXPECT_CALL(*handler, onCarActionNotification(_)).WillOnce(SaveArg<0>(&action));
+    EXPECT_EQ(deliver(carControl, handler, channel, 0x8006, {0x0A, 0x02, 0x08, 0x01}), 1);
+    EXPECT_EQ(action.action().action_id(), msg::CAR_ACTION_LAUNCH_HVAC);
+}
+
+TEST_F(ServiceChannelsUnitTest, CarControl_DefaultsAndUnexpectedMessagesKeepReceiving)
+{
+    auto carControl = std::make_shared<carcontrol::CarControlService>(strand_, messenger_);
+    auto minimal = std::make_shared<testing::StrictMock<CarControlMinimalHandlerMock>>();
+    const auto channel = messenger::ChannelId::CAR_CONTROL;
+    // a request without an override, a head unit message sent by the phone, an unknown id
+    EXPECT_EQ(deliver(carControl, minimal, channel, 0x8006, {0x0A, 0x02, 0x08, 0x01}), 1);
+    EXPECT_EQ(deliver(carControl, minimal, channel, 0x8005, {}), 1);
+    EXPECT_EQ(deliver(carControl, minimal, channel, 0x8010, {}), 1);
+
+    // a request that does not parse is dropped, the channel stays open
+    auto handler = std::make_shared<testing::StrictMock<CarControlHandlerMock>>();
+    EXPECT_EQ(deliver(carControl, handler, channel, 0x8001, {0x0A, 0x7F}), 1);
 }
 
 }

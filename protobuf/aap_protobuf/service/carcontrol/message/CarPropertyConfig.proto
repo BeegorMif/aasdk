@@ -1,0 +1,25 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/CarPropertyValueType.proto";
+import "aap_protobuf/service/carcontrol/message/CarPropertyAccess.proto";
+import "aap_protobuf/service/carcontrol/message/CarAreaId.proto";
+import "aap_protobuf/service/carcontrol/message/CarAreaType.proto";
+import "aap_protobuf/service/carcontrol/message/CarAreaConfig.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// A property the head unit offers. Put every area in both area_ids and area_configs: the phone registers the
+// properties of area_ids and shows only areas that have an area config.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// open-android-auto: 2 access mode, 3 change mode, 5 property type.
+message CarPropertyConfig {
+  optional int32 property_id = 1;  // VehiclePropertyId or another VHAL id
+  optional CarPropertyValueType value_type = 2;
+  optional CarPropertyAccess access = 3;
+  repeated CarAreaId area_ids = 4;
+  optional CarAreaType area_type = 5;
+  repeated int32 config_array = 6 [packed = true];  // VHAL config array, see VehiclePropertyId
+  repeated CarAreaConfig area_configs = 7;
+}

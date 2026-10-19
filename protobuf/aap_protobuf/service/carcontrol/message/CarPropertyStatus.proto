@@ -1,0 +1,14 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carcontrol.message;
+
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+// Any other value makes Android Auto throw.
+enum CarPropertyStatus {
+  CAR_PROPERTY_STATUS_UNKNOWN = 0;      // treated as unavailable
+  CAR_PROPERTY_STATUS_AVAILABLE = 1;    // value is valid; the only status that shows a value
+  CAR_PROPERTY_STATUS_UNAVAILABLE = 2;
+  CAR_PROPERTY_STATUS_ERROR = 3;
+}

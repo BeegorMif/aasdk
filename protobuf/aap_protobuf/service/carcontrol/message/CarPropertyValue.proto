@@ -1,0 +1,24 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carcontrol/message/Int32Values.proto";
+import "aap_protobuf/service/carcontrol/message/Int64Values.proto";
+import "aap_protobuf/service/carcontrol/message/FloatValues.proto";
+
+package aap_protobuf.service.carcontrol.message;
+
+// Use the member that matches the config's value type; the phone casts the value for its widgets.
+// Source: Android Auto 17.9 app analysis; verified with a phone (Fairphone 4, average-web-dev/openhu#121).
+message CarPropertyValue {
+  oneof value {
+    int32 int32_value = 1;
+    float float_value = 2;
+    bool bool_value = 3;
+    int64 int64_value = 4;
+    string string_value = 5;
+    Int32Values int32_values = 6;
+    Int64Values int64_values = 7;
+    FloatValues float_values = 8;
+  }
+}

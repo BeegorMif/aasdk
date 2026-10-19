@@ -310,6 +310,7 @@ std::string ModernLogger::categoryToString(LogCategory category) {
         case LogCategory::CHANNEL_NOTIFICATION:   return "CHANNEL_NOTIFICATION";
         case LogCategory::CHANNEL_VENDOR_EXT:     return "CHANNEL_VENDOR_EXT";
         case LogCategory::CHANNEL_WIFI_PROJECTION: return "CHANNEL_WIFI_PROJECTION";
+        case LogCategory::CHANNEL_CAR_CONTROL:    return "CHANNEL_CAR_CONTROL";
         case LogCategory::CHANNEL_MEDIA_BROWSER:  return "CHANNEL_MEDIA_BROWSER";
         case LogCategory::CHANNEL_PLAYBACK_STATUS: return "CHANNEL_PLAYBACK_STATUS";
         
@@ -366,6 +367,7 @@ LogCategory ModernLogger::stringToCategory(const std::string& category) {
     if (category == "CHANNEL_NOTIFICATION")   return LogCategory::CHANNEL_NOTIFICATION;
     if (category == "CHANNEL_VENDOR_EXT")     return LogCategory::CHANNEL_VENDOR_EXT;
     if (category == "CHANNEL_WIFI_PROJECTION") return LogCategory::CHANNEL_WIFI_PROJECTION;
+    if (category == "CHANNEL_CAR_CONTROL")    return LogCategory::CHANNEL_CAR_CONTROL;
     if (category == "CHANNEL_MEDIA_BROWSER")  return LogCategory::CHANNEL_MEDIA_BROWSER;
     if (category == "CHANNEL_PLAYBACK_STATUS") return LogCategory::CHANNEL_PLAYBACK_STATUS;
     
@@ -509,6 +511,7 @@ std::string AasdkConsoleFormatter::getCategoryColor(LogCategory category) const 
         case LogCategory::CHANNEL_NOTIFICATION:   return "\033[96m";    // Light Cyan
         case LogCategory::CHANNEL_VENDOR_EXT:     return "\033[93m";    // Light Yellow
         case LogCategory::CHANNEL_WIFI_PROJECTION: return "\033[95m";   // Light Magenta
+        case LogCategory::CHANNEL_CAR_CONTROL:    return "\033[92m";    // Light Green
         case LogCategory::CHANNEL_MEDIA_BROWSER:  return "\033[91m";    // Light Red
         case LogCategory::CHANNEL_PLAYBACK_STATUS: return "\033[94m";   // Light Blue
         
