@@ -2,7 +2,10 @@
 
 include(CMakeFindDependencyMacro)
 # AASDK::aasdk links AAPProto::aap_protobuf and the Boost targets
-find_dependency(aap_protobuf @AASDK_BASE_VERSION@ EXACT CONFIG PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH)
+# The generated aap_protobuf package can include build metadata (for example,
+# 2.1.0+). Its version file declares same-major compatibility, so requiring an
+# exact string match rejects compatible builds with metadata suffixes.
+find_dependency(aap_protobuf @AASDK_BASE_VERSION@ CONFIG PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH)
 find_dependency(Boost CONFIG COMPONENTS system log_setup log)
 
 set(AASDK_INCLUDE_DIRS @CMAKE_INSTALL_FULL_INCLUDEDIR@)
