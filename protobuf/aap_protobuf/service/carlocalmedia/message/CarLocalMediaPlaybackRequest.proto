@@ -1,0 +1,13 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+import "aap_protobuf/service/carlocalmedia/message/CarLocalMediaPlaybackAction.proto";
+
+package aap_protobuf.service.carlocalmedia.message;
+
+// 0x8003 phone -> HU: a button in the phone's media card. No reply. Source: open-android-auto
+// docs/channels/media.md; verified with a phone (average-web-dev/openhu#147).
+message CarLocalMediaPlaybackRequest {
+  optional CarLocalMediaPlaybackAction action = 1;
+}

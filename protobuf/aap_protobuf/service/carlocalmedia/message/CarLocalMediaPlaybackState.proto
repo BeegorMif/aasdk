@@ -1,0 +1,16 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carlocalmedia.message;
+
+// The names are what the phone makes of the values (android.media.session.PlaybackState), verified with a phone
+// (Fairphone 4, Android Auto 17.x, average-web-dev/openhu#147). With PLAYING the phone shows the source in its media
+// card (the session moves to the top).
+enum CarLocalMediaPlaybackState {
+  CAR_LOCAL_MEDIA_PLAYBACK_STATE_STOPPED = 1;
+  CAR_LOCAL_MEDIA_PLAYBACK_STATE_PLAYING = 2;
+  CAR_LOCAL_MEDIA_PLAYBACK_STATE_PAUSED = 3;
+  CAR_LOCAL_MEDIA_PLAYBACK_STATE_ERROR = 4;
+  CAR_LOCAL_MEDIA_PLAYBACK_STATE_NONE = 5;
+}

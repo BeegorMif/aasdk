@@ -1,0 +1,14 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carlocalmedia;
+
+// Car local media channel (service type 20 in Android Auto): the head unit's own sources (radio, USB music) in the
+// phone's media card. Source: open-android-auto docs/channels/media.md (Android Auto 17.3 app analysis); verified
+// with a phone (Fairphone 4, Android Auto 17.x, average-web-dev/openhu#147).
+enum CarLocalMediaMessageId {
+  CAR_LOCAL_MEDIA_MESSAGE_PLAYBACK_STATUS = 32769;    // 0x8001 HU -> phone
+  CAR_LOCAL_MEDIA_MESSAGE_PLAYBACK_METADATA = 32770;  // 0x8002 HU -> phone
+  CAR_LOCAL_MEDIA_MESSAGE_PLAYBACK_REQUEST = 32771;   // 0x8003 phone -> HU
+}
