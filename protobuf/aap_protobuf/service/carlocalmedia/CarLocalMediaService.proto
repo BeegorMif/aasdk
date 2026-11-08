@@ -4,8 +4,10 @@ option optimize_for=SPEED;
 
 package aap_protobuf.service.carlocalmedia;
 
-// Car local media (service type 20). An empty message: presence enables the service; the phone
-// gates it with a phenotype flag (HeroFeature__enabled).
-// Source: Android Auto 17.9 app analysis, not verified with a phone. average-web-dev/aasdk#40
+// Car local media (service type 20). An empty message: presence enables the service. The phone opens the channel,
+// enables its internal CarLocalMediaBrowserService and shows the source in its media card (messages in
+// CarLocalMediaMessageId). It has no browsing: the phone's tree under the root is always empty.
+// Source: Android Auto 17.9 app analysis; verified with a phone at 1920x1080 (Fairphone 4, Android Auto 17.x,
+// average-web-dev/openhu#147). average-web-dev/aasdk#40
 message CarLocalMediaService {
 }
