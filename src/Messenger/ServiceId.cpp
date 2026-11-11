@@ -51,6 +51,8 @@ namespace aasdk {
           return "WIFI_PROJECTION";
         case ServiceId::CAR_CONTROL:
           return "CAR_CONTROL";
+        case ServiceId::CAR_LOCAL_MEDIA:
+          return "CAR_LOCAL_MEDIA";
         case ServiceId::NONE:
           return "NONE";
         default:

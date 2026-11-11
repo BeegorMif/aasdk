@@ -1,0 +1,15 @@
+syntax="proto2";
+
+option optimize_for=SPEED;
+
+package aap_protobuf.service.carlocalmedia.message;
+
+// Source: open-android-auto docs/channels/media.md; PLAY, PREVIOUS and NEXT verified with a phone (the phone's media
+// card sends them, average-web-dev/openhu#147).
+enum CarLocalMediaPlaybackAction {
+  CAR_LOCAL_MEDIA_PLAYBACK_ACTION_PLAY = 0;
+  CAR_LOCAL_MEDIA_PLAYBACK_ACTION_PAUSE = 1;
+  CAR_LOCAL_MEDIA_PLAYBACK_ACTION_PREVIOUS = 2;
+  CAR_LOCAL_MEDIA_PLAYBACK_ACTION_NEXT = 3;
+  CAR_LOCAL_MEDIA_PLAYBACK_ACTION_STOP = 4;
+}

@@ -37,6 +37,7 @@ namespace aasdk {
       GENERIC_NOTIFICATION,
       WIFI_PROJECTION,
       CAR_CONTROL,
+      CAR_LOCAL_MEDIA,
       NONE = 255
     };
 
